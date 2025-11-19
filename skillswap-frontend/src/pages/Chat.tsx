@@ -5,7 +5,7 @@ import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Note: Use 127.0.0.1 for stability if you changed your API client
-const WS_URL = "ws://localhost:10000/chats/ws/";
+const WS_URL = "wss://talent-ml2c.onrender.com/chats/ws/";
 const RECONNECT_DELAY = 3000; // 3 seconds delay for reconnection attempts
 
 // --- Reusable WebSocket setup function ---

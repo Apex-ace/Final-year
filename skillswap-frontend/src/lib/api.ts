@@ -3,7 +3,7 @@ import { supabase } from "./supabase";
 
 // ✅ FIX 1: Set BASE_URL to port 10000
 export const api = axios.create({
-  baseURL: "http://localhost:10000", 
+  baseURL: "https://talent-ml2c.onrender.com", 
 });
 
 // Add Supabase auth token to headers

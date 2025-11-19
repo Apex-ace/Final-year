@@ -8,4 +8,4 @@ export const supabase = createClient(
 
 // Backend FastAPI URL (what frontend calls)
 export const apiBase =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:10000";
+  import.meta.env.VITE_API_BASE_URL || "https://talent-ml2c.onrender.com";
