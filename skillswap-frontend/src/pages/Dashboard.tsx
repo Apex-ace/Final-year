@@ -95,7 +95,8 @@ export default function Dashboard() {
   // ------------------------------
   // AMOLED DARK UI (UI only, logic untouched)
   // ------------------------------
-  const screen = "min-h-screen bg-[#050505] text-gray-200 px-4 py-6";
+const screen = "min-h-screen bg-[#050505] text-gray-200 px-4 safe-top pb-6";
+
   const card = "bg-[#0b0f10]/80 backdrop-blur-xl border border-[#10191c] rounded-xl shadow-md";
   const tealBtn = "bg-gradient-to-br from-[#00e6c3] to-[#009f82] text-black font-semibold";
   const subtleText = "text-gray-400";

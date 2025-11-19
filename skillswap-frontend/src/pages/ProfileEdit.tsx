@@ -123,8 +123,8 @@ export default function ProfileEdit() {
     return <div className="text-center text-red-500 p-10">Error loading profile.</div>;
 
   // THEME (WhatsApp AMOLED)
-  const screen = "min-h-screen bg-[#050505] text-gray-200 px-5 py-6";
-  const card =
+    const screen = "min-h-screen bg-[#050505] text-gray-200 px-5 safe-top pb-6";
+    const card =
     "w-full bg-[#0b0f10]/80 backdrop-blur-xl border border-[#10191c] rounded-2xl p-6 shadow-xl";
   const label = "text-sm text-gray-400 mb-1 block";
   const inputBox =

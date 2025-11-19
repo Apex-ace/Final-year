@@ -82,7 +82,8 @@ export default function Browse() {
   // ============================
   // THEME VARIABLES
   // ============================
-  const screen = "min-h-screen bg-[#050505] text-gray-200 px-4 py-6";
+ const screen = "min-h-screen bg-[#050505] text-gray-200 px-4 safe-top pb-6";
+
   const card = "bg-[#0c1317]/80 backdrop-blur-xl border border-[#1a2a2e] rounded-xl shadow-lg";
   const searchBox =
     "w-full px-5 py-3 rounded-xl bg-[#0c1317] border border-[#1a2a2e] text-gray-200 placeholder-gray-500 focus:ring-2 focus:ring-teal-400 outline-none";

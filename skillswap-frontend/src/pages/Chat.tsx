@@ -222,7 +222,8 @@ export default function ChatMobile() {
   const theirBubble = "bg-[#0b1013] border border-[#0f1720] text-gray-200";
 
   return (
-    <div className={`min-h-screen ${containerBg} text-gray-200`}>
+    <div className={`min-h-screen safe-top ${containerBg} text-gray-200`}>
+
       <div className="max-w-md mx-auto h-screen flex flex-col">
         {/* App header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-[#0b1113]">

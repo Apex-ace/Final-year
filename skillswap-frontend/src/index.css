@@ -5,3 +5,20 @@
 body {
   background-color: #f3f4f6; /* same as bg-gray-100 */
 }
+
+/* ---------------------------
+   SAFE AREA SUPPORT
+   --------------------------- */
+
+:root {
+  --sat: env(safe-area-inset-top);
+  --sab: env(safe-area-inset-bottom);
+}
+
+.safe-top {
+  padding-top: max(1rem, var(--sat));
+}
+
+.safe-bottom {
+  padding-bottom: max(1rem, var(--sab));
+}
