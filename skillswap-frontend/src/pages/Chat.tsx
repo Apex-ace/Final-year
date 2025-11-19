@@ -3,7 +3,7 @@ import { api } from "../lib/api";
 import { supabase } from "../lib/supabase";
 import { useSearchParams } from "react-router-dom";
 
-const WS_URL = "ws://localhost:10000/ws/";
+const WS_URL = "ws://localhost:10000/ws/"; // !! Ensure this matches your FastAPI host/port !!
 
 export default function Chat() {
   const [conversations, setConversations] = useState<any[]>([]);
@@ -19,77 +19,130 @@ export default function Chat() {
 
   const [searchParams] = useSearchParams();
 
-  // --------------------------------------------
-  // 1) LOAD USER + CONVERSATIONS
-  // --------------------------------------------
-  useEffect(() => {
-    loadInitial();
-  }, []);
-
-  async function loadInitial() {
-    // Load user profile from backend (auth handled automatically)
-    const meRes = await api.get("/users/me");
-    const userId = meRes.data.user.id;
-    setMe(userId);
-
-    // Load conversations
-    const convRes = await api.get("/chats/");
-    const list = convRes.data.conversations || [];
-    setConversations(list);
-
-    // If URL has conversation param, use that
-    const urlConv = searchParams.get("c");
-    if (urlConv) {
-      setActiveChat(urlConv);
-    } else if (list.length > 0) {
-      setActiveChat(list[0].id);
-    }
-  }
-
-  // --------------------------------------------
-  // 2) LOAD MESSAGES + SETUP WEBSOCKET WHEN CHAT CHANGES
-  // --------------------------------------------
-  useEffect(() => {
-    if (!activeChat || !me) return;
-
-    const conv = conversations.find((c) => c.id === activeChat);
-    setActivePartner(conv?.partner || null);
-
-    loadMessages(activeChat);
-
-    // Close old socket if exists
-    if (ws.current) ws.current.close();
-
-    // Open new WS connection
-    const socket = new WebSocket(`${WS_URL}${activeChat}?user_id=${me}`);
-    ws.current = socket;
-
-    socket.onmessage = (e) => {
-      const msg = JSON.parse(e.data);
-      if (msg.id) {
-        setMessages((prev) =>
-          prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]
-        );
-      }
-    };
-
-    return () => socket.close();
-  }, [activeChat, me]);
-
-  // --------------------------------------------
-  // 3) LOAD MESSAGES FROM BACKEND
-  // --------------------------------------------
+  // Helper function to load messages from the backend
   async function loadMessages(convId: string) {
     const res = await api.get(`/chats/${convId}/messages`);
     setMessages(res.data.messages);
   }
 
   // --------------------------------------------
-  // 4) SEND MESSAGE
+  // 1) CONSOLIDATED LOADING + INITIAL WEBSOCKET SETUP (FIXED)
+  //    Ensures authentication check runs first to fix the 401 error.
+  // --------------------------------------------
+  useEffect(() => {
+    const loadAndSetupChat = async () => {
+      let userId = me;
+      
+      // 1. Authenticate and Load User ID (MANDATORY first step to guarantee token is set)
+      if (!userId) {
+        try {
+          // This call forces the API interceptor to resolve the session token
+          const meRes = await api.get("/users/me");
+          // Path corrected based on your users.py returning {"profile": {...}}
+          userId = meRes.data.profile.id; 
+          setMe(userId);
+        } catch (e) {
+          console.error("Authentication Error: Failed to fetch user ID. Session may be expired or token missing.");
+          // Stop execution if we cannot authenticate
+          return; 
+        }
+      }
+      
+      // --- From here, we know userId is valid and token is in the interceptor ---
+
+      // 2. Load Conversations List (Now authorized)
+      const convRes = await api.get("/chats/");
+      const list = convRes.data.conversations || [];
+      setConversations(list);
+
+      // 3. Determine Active Chat ID from URL or List
+      const urlConv = searchParams.get("c");
+      const targetConvId = urlConv || (list.length > 0 ? list[0].id : null);
+      
+      if (!targetConvId) return;
+
+      setActiveChat(targetConvId);
+      
+      // 4. Set Active Partner and Load Messages
+      const conv = list.find((c: any) => c.id === targetConvId);
+      setActivePartner(conv?.partner || null);
+      await loadMessages(targetConvId); 
+
+      // 5. Setup WebSocket connection
+      if (ws.current) ws.current.close(); 
+      
+      // Open new WS connection using the determined ID
+      const socket = new WebSocket(`${WS_URL}${targetConvId}?user_id=${userId}`);
+      ws.current = socket;
+
+      socket.onmessage = (e) => {
+        const msg = JSON.parse(e.data);
+        if (msg.id) {
+          setMessages((prev) =>
+            prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]
+          );
+        }
+      };
+      
+      // Handle socket closure
+      socket.onclose = () => {
+          console.log(`WebSocket disconnected for conversation ${targetConvId}`);
+      };
+    };
+
+    loadAndSetupChat().catch(err => {
+        console.error("Failed to load chat or connect WebSocket:", err);
+    });
+
+    // Cleanup function: Close WebSocket when component unmounts or dependencies change
+    return () => {
+        if (ws.current) ws.current.close();
+    };
+  }, [searchParams]); // Depend only on searchParams (for URL navigation)
+
+  // --------------------------------------------
+  // 2) HANDLE SIDEBAR CLICK
+  // --------------------------------------------
+  const handleChatChange = async (convId: string) => {
+    if (convId === activeChat) return;
+    
+    // 1. Close old socket
+    if (ws.current) ws.current.close(); 
+
+    // 2. Update state and load messages/partner
+    setActiveChat(convId);
+    
+    const conv = conversations.find((c) => c.id === convId);
+    setActivePartner(conv?.partner || null);
+    await loadMessages(convId);
+
+    // 3. Open new WS connection
+    if (me) {
+        const socket = new WebSocket(`${WS_URL}${convId}?user_id=${me}`);
+        ws.current = socket;
+        
+        socket.onmessage = (e) => {
+            const msg = JSON.parse(e.data);
+            if (msg.id) {
+                setMessages((prev) =>
+                    prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]
+                );
+            }
+        };
+        
+        socket.onclose = () => {
+            console.log(`WebSocket disconnected for conversation ${convId}`);
+        };
+    }
+  };
+
+
+  // --------------------------------------------
+  // 3) SEND MESSAGE
   // --------------------------------------------
   function sendMessage(e: any) {
     e.preventDefault();
-    if (!input.trim() || !ws.current) return;
+    if (!input.trim() || !ws.current || ws.current.readyState !== WebSocket.OPEN) return;
 
     ws.current.send(
       JSON.stringify({
@@ -101,10 +154,13 @@ export default function Chat() {
   }
 
   // --------------------------------------------
-  // 5) AUTO SCROLL TO BOTTOM
+  // 4) AUTO SCROLL TO BOTTOM
   // --------------------------------------------
   useLayoutEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Use setTimeout for reliability if message rendering is delayed
+    setTimeout(() => {
+        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 50);
   }, [messages]);
 
   // --------------------------------------------
@@ -124,7 +180,7 @@ export default function Chat() {
         {conversations.map((c) => (
           <button
             key={c.id}
-            onClick={() => setActiveChat(c.id)}
+            onClick={() => handleChatChange(c.id)}
             className={`flex w-full items-center gap-3 p-4 border-b text-left hover:bg-gray-100 ${
               activeChat === c.id ? "bg-indigo-50" : ""
             }`}
@@ -145,10 +201,14 @@ export default function Chat() {
       {/* ---------- RIGHT CHAT PANEL ---------- */}
       <div className="flex-1 flex flex-col">
 
-        {!activePartner ? (
+        {!activePartner && activeChat ? (
           <div className="flex-1 flex items-center justify-center text-gray-500 text-lg">
-            Loading chat…
+            Loading chat details...
           </div>
+        ) : !activeChat ? (
+             <div className="flex-1 flex items-center justify-center text-gray-500 text-lg">
+                Select a conversation or send a swap request to start chatting.
+             </div>
         ) : (
           <>
             {/* TOP BAR */}
@@ -193,6 +253,7 @@ export default function Chat() {
                 onChange={(e) => setInput(e.target.value)}
               />
               <button
+                type="submit"
                 className="bg-indigo-600 text-white px-6 py-2 rounded-full hover:bg-indigo-700"
               >
                 Send

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "../lib/supabase"; // Import Supabase client
 
 interface UserProfile {
   id: string;
@@ -33,12 +34,26 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    loadData();
-  }, []);
+    // FIX: Explicitly wait for the session before making authenticated API calls
+    const checkSessionAndLoad = async () => {
+        setLoading(true);
+        // Step 1: Wait for the Supabase session to resolve
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session) {
+            // Step 2: Session is valid, now proceed with authenticated loading
+            loadData();
+        } else {
+            // Handle not logged in (e.g., redirect to login)
+            console.warn("No active session found. Redirecting to login.");
+            navigate("/"); // Redirect to the login page
+        }
+    }
+    checkSessionAndLoad();
+  }, [navigate]); // navigate is stable, but adding it for best practice
 
   async function loadData() {
     try {
-      setLoading(true);
       // 1. Fetch My Profile
       const profileRes = await api.get("/users/me");
       setProfile(profileRes.data.profile);
@@ -68,6 +83,7 @@ export default function Dashboard() {
       if (action === "accept") {
         // If backend returns a conversation ID, redirect immediately
         if (res.data.conversation_id) {
+            // This redirection is now reliable because the backend succeeded (200 OK)
             navigate(`/chat?c=${res.data.conversation_id}`);
             return; 
         } 
