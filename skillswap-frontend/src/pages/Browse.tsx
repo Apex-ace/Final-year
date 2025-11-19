@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 
 // --- TYPES ---
 interface Skill {
@@ -19,59 +20,54 @@ interface Profile {
 }
 
 export default function Browse() {
-  // State for Skills Search
+  // States
   const [skills, setSkills] = useState<Skill[]>([]);
   const [query, setQuery] = useState("");
   const [loadingSkills, setLoadingSkills] = useState(false);
 
-  // State for Selected Skill & Profiles
   const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loadingProfiles, setLoadingProfiles] = useState(false);
 
-  // 1. Load Skills (Debounced)
+  // Search skill with debounce
   useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
+    const delay = setTimeout(() => {
       if (!selectedSkill) searchSkills();
     }, 500);
-    return () => clearTimeout(delayDebounceFn);
-  }, [query, selectedSkill]);
+    return () => clearTimeout(delay);
+  }, [query]);
 
   const searchSkills = async () => {
     setLoadingSkills(true);
     try {
-      let supabaseQuery = supabase
-        .from("skills")
-        .select("*")
-        .order("name", { ascending: true });
+      let supabaseQuery = supabase.from("skills").select("*").order("name");
 
-      if (query) supabaseQuery = supabaseQuery.ilike("name", `%${query}%`);
+      if (query)
+        supabaseQuery = supabaseQuery.ilike("name", `%${query}%`);
 
       const { data } = await supabaseQuery;
       setSkills(data || []);
-    } catch (error) {
-      console.error("Error fetching skills", error);
+    } catch (err) {
+      console.error("Error fetching skills:", err);
     } finally {
       setLoadingSkills(false);
     }
   };
 
-  // 2. Load Profiles when a Skill is clicked
   const handleSkillClick = async (skillName: string) => {
     setSelectedSkill(skillName);
     setLoadingProfiles(true);
     setProfiles([]);
 
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("profiles")
         .select("*")
-        .contains("skills_offered", [skillName]); 
+        .contains("skills_offered", [skillName]);
 
-      if (error) throw error;
       setProfiles(data || []);
-    } catch (error) {
-      console.error("Error fetching profiles", error);
+    } catch (err) {
+      console.error("Error fetching profiles:", err);
     } finally {
       setLoadingProfiles(false);
     }
@@ -83,113 +79,145 @@ export default function Browse() {
     setQuery("");
   };
 
+  // ============================
+  // THEME VARIABLES
+  // ============================
+  const screen = "min-h-screen bg-[#050505] text-gray-200 px-4 py-6";
+  const card = "bg-[#0c1317]/80 backdrop-blur-xl border border-[#1a2a2e] rounded-xl shadow-lg";
+  const searchBox =
+    "w-full px-5 py-3 rounded-xl bg-[#0c1317] border border-[#1a2a2e] text-gray-200 placeholder-gray-500 focus:ring-2 focus:ring-teal-400 outline-none";
+  const skillBtn =
+    "p-4 rounded-xl bg-[#0c1317] border border-[#1a2a2e] text-gray-200 hover:text-teal-300 hover:border-teal-500 shadow transition font-medium text-center";
+  const profileBtn =
+    "block w-full text-center py-2 rounded-lg bg-[#0e181b] border border-[#1a2a2e] text-teal-300 hover:border-teal-400 hover:bg-[#122125] transition font-semibold";
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto">
-        
-        {/* --- VIEW 1: SKILL LIST --- */}
+    <div className={screen}>
+      <div className="max-w-4xl mx-auto">
+
+        {/* ===== SKILL LIST VIEW ===== */}
         {!selectedSkill && (
           <>
-            <div className="mb-8 text-center">
-              <h2 className="text-3xl font-extrabold text-gray-900 mb-4">Browse Skills</h2>
-              <div className="relative max-w-md mx-auto">
-                <input
-                  type="text"
-                  className="block w-full px-4 py-3 border border-gray-300 rounded-full shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none transition"
-                  placeholder="Search for Python, Design..."
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                />
-              </div>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8 text-center"
+            >
+              <h2 className="text-3xl font-bold text-teal-300 mb-4">
+                Browse Skills
+              </h2>
+
+              <input
+                type="text"
+                placeholder="Search for Python, Design..."
+                className={searchBox}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </motion.div>
 
             {loadingSkills ? (
               <div className="text-center text-gray-500">Loading skills...</div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 {skills.map((skill) => (
-                  <button
+                  <motion.button
                     key={skill.id}
+                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.05 }}
                     onClick={() => handleSkillClick(skill.name)}
-                    className="p-4 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-400 hover:bg-indigo-50 transition-all text-left group"
+                    className={skillBtn}
                   >
-                    <span className="font-medium text-gray-700 group-hover:text-indigo-700">
-                      {skill.name}
-                    </span>
-                  </button>
+                    {skill.name}
+                  </motion.button>
                 ))}
               </div>
             )}
           </>
         )}
 
-        {/* --- VIEW 2: PROFILES LIST --- */}
+        {/* ===== PROFILES VIEW ===== */}
         {selectedSkill && (
-          <div>
-            <div className="flex items-center justify-between mb-8">
-              <button 
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="pt-4">
+
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <button
                 onClick={handleBack}
-                className="flex items-center text-gray-600 hover:text-indigo-600 transition font-medium"
+                className="text-gray-400 hover:text-teal-300 transition"
               >
-                &larr; Back to Skills
+                ← Back
               </button>
-              <h2 className="text-2xl font-bold text-gray-900">
-                Experts in <span className="text-indigo-600">{selectedSkill}</span>
+
+              <h2 className="text-xl font-semibold">
+                Experts in <span className="text-teal-300">{selectedSkill}</span>
               </h2>
             </div>
 
+            {/* Loading Skeleton */}
             {loadingProfiles ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-pulse">
-                 {[1,2,3].map(i => <div key={i} className="h-48 bg-gray-200 rounded-xl"></div>)}
+              <div className="grid grid-cols-1 gap-6">
+                {[1, 2].map((x) => (
+                  <div
+                    key={x}
+                    className="h-40 rounded-xl bg-[#0c1317]/60 border border-[#1a2a2e] animate-pulse"
+                  ></div>
+                ))}
               </div>
             ) : profiles.length === 0 ? (
-              <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
-                <p className="text-gray-500 text-lg">No users found offering {selectedSkill} yet.</p>
+              <div className={`${card} p-6 text-center`}>
+                <p className="text-gray-400 text-lg">
+                  No users found offering {selectedSkill}.
+                </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {profiles.map((profile) => (
-                  <div key={profile.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col">
-                    <div className="p-6 flex-grow">
-                      <div className="flex items-center space-x-4 mb-4">
+                  <motion.div
+                    key={profile.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`${card} overflow-hidden`}
+                  >
+                    <div className="p-5">
+                      {/* Header */}
+                      <div className="flex items-center gap-4 mb-3">
                         {profile.profile_image_url ? (
-                          <img 
-                            src={profile.profile_image_url} 
-                            alt={profile.full_name} 
-                            className="h-12 w-12 rounded-full object-cover border border-gray-100"
+                          <img
+                            src={profile.profile_image_url}
+                            className="h-12 w-12 rounded-full object-cover border border-[#1a2a2e]"
                           />
                         ) : (
-                          <div className="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-lg">
-                            {profile.full_name ? profile.full_name[0] : "?"}
+                          <div className="h-12 w-12 rounded-full bg-[#1d2a30] flex items-center justify-center text-teal-300 font-bold">
+                            {profile.full_name?.[0]}
                           </div>
                         )}
-                        
+
                         <div>
-                          <h3 className="text-lg font-bold text-gray-900 leading-tight">
-                            {profile.full_name || "Anonymous"}
+                          <h3 className="text-lg font-bold text-teal-300">
+                            {profile.full_name}
                           </h3>
-                          <p className="text-sm text-gray-500">{profile.city || "Remote"}</p>
+                          <p className="text-gray-400 text-sm">
+                            {profile.city || "Remote"}
+                          </p>
                         </div>
                       </div>
 
-                      <p className="text-gray-600 text-sm mb-4 line-clamp-3">
+                      {/* Bio */}
+                      <p className="text-gray-400 text-sm mb-4 line-clamp-3">
                         {profile.bio || "No bio provided."}
                       </p>
+
+                      {/* View Profile */}
+                      <Link to={`/profile/${profile.id}`} className={profileBtn}>
+                        View Profile
+                      </Link>
                     </div>
-                    
-                    <div className="px-6 pb-6 mt-auto">
-                        <Link
-                          to={`/profile/${profile.id}`}
-                          className="block w-full text-center py-2 px-4 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium rounded-lg border border-indigo-100 transition-colors text-sm"
-                        >
-                          View Profile
-                        </Link>
-                    </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             )}
-          </div>
+          </motion.div>
         )}
       </div>
     </div>

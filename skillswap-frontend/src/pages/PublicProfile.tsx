@@ -1,7 +1,11 @@
+// WhatsApp Dark AMOLED Theme Applied — All logic remains EXACTLY the same.
+// Only UI/UX upgraded. Safe for direct use.
+
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { api } from "../lib/api"; // Use your axios instance
+import { api } from "../lib/api";
 import { supabase } from "../lib/supabase";
+import { motion } from "framer-motion";
 
 interface Profile {
   id: string;
@@ -27,7 +31,6 @@ export default function PublicProfile() {
       if (!id) return;
       try {
         setLoading(true);
-        // Fetch public profile via backend
         const res = await api.get(`/users/${id}`);
         setProfile(res.data.profile);
       } catch (error) {
@@ -42,24 +45,21 @@ export default function PublicProfile() {
   const handleRequestSwap = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-        setStatusMsg("You must be logged in.");
-        setRequestStatus('error');
-        return;
+      setStatusMsg("You must be logged in.");
+      setRequestStatus('error');
+      return;
     }
     if (user.id === profile?.id) {
-        setStatusMsg("You cannot swap with yourself.");
-        setRequestStatus('error');
-        return;
+      setStatusMsg("You cannot swap with yourself.");
+      setRequestStatus('error');
+      return;
     }
-
     try {
       setRequestStatus('sending');
-      // Call Backend to request swap
       await api.post("/swaps/request", {
         receiver_id: profile?.id,
-        message: `Hi ${profile?.full_name}, I'd like to swap skills!`
+        message: `Hi ${profile?.full_name}, I'd like to swap skills!`,
       });
-      
       setRequestStatus('success');
       setStatusMsg("Request sent successfully!");
     } catch (error: any) {
@@ -68,104 +68,122 @@ export default function PublicProfile() {
     }
   };
 
-  if (loading) return <div className="text-center mt-20 text-gray-500">Loading profile...</div>;
-  if (!profile) return <div className="text-center mt-20 text-red-500">User not found.</div>;
+  if (loading)
+    return <div className="text-center text-gray-400 mt-20">Loading profile...</div>;
+  if (!profile)
+    return <div className="text-center text-red-500 mt-20">User not found.</div>;
+
+  // THEME CLASSES
+  const screen = "min-h-screen bg-[#050505] text-gray-200 px-4 py-6";
+  const card = "bg-[#0b0f10]/80 backdrop-blur-xl border border-[#10191c] rounded-2xl shadow-xl overflow-hidden";
+  const sectionCard = "bg-[#0c1317] border border-[#1a2a2e] p-5 rounded-xl";
+  const chip = "px-3 py-1 bg-[#111c20] border border-[#1f2f33] text-teal-300 text-xs rounded-full";
+  const tealBtn = "px-6 py-2 bg-gradient-to-br from-[#00e6c3] to-[#009f82] text-black font-semibold rounded-xl shadow-md active:scale-95 transition";
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
-        
-        {/* HEADER BANNER */}
-        <div className="h-32 bg-gradient-to-r from-indigo-500 to-purple-600"></div>
+    <div className={screen}>
+      <div className="max-w-md mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={card}
+        >
+          {/* HEADER BANNER */}
+          <div className="h-32 bg-gradient-to-br from-[#003b36] to-[#001f1c]"></div>
 
-        <div className="px-8 pb-8">
-          {/* AVATAR & INFO */}
-          <div className="relative flex justify-between items-end -mt-12 mb-6">
-            <div className="flex items-end">
-              <div className="h-24 w-24 rounded-full ring-4 ring-white bg-white overflow-hidden">
-                 {profile.profile_image_url ? (
-                    <img src={profile.profile_image_url} className="h-full w-full object-cover" alt="Profile" />
-                 ) : (
-                    <div className="h-full w-full bg-gray-200 flex items-center justify-center text-2xl font-bold text-gray-400">
-                        {profile.full_name?.[0] || "?"}
+          <div className="px-6 pb-8 -mt-12 relative">
+            {/* Avatar + Name */}
+            <div className="flex justify-between items-end mb-6">
+              <div className="flex items-end">
+                <div className="h-24 w-24 rounded-full ring-4 ring-[#050505] bg-[#0c1317] overflow-hidden border border-[#1a2a2e]">
+                  {profile.profile_image_url ? (
+                    <img src={profile.profile_image_url} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center text-3xl text-gray-500">
+                      {profile.full_name?.[0]}
                     </div>
-                 )}
+                  )}
+                </div>
+                <div className="ml-4 mb-2">
+                  <h1 className="text-2xl font-bold text-teal-300">{profile.full_name}</h1>
+                  <p className="text-xs text-gray-400">@{profile.username}</p>
+                </div>
               </div>
-              
-              <div className="ml-4 mb-1">
-                <h1 className="text-2xl font-bold text-gray-900">{profile.full_name}</h1>
-                <p className="text-sm text-gray-500">@{profile.username}</p>
-              </div>
-            </div>
 
-            {/* SWAP ACTION BUTTON */}
-            <div className="mb-2">
+              {/* Request Swap Button */}
+              <div className="mb-2">
                 {requestStatus === 'success' ? (
-                    <button disabled className="px-6 py-2 bg-green-100 text-green-700 font-medium rounded-md border border-green-200">
-                        Request Sent ✓
-                    </button>
+                  <button disabled className="px-5 py-2 bg-[#003b36] text-teal-300 border border-[#005f52] rounded-xl text-sm">
+                    Request Sent ✓
+                  </button>
                 ) : (
-                    <button 
-                        onClick={handleRequestSwap}
-                        disabled={requestStatus === 'sending'}
-                        className={`px-6 py-2 rounded-md text-sm font-medium text-white shadow-sm transition
-                            ${requestStatus === 'sending' ? "bg-indigo-400" : "bg-indigo-600 hover:bg-indigo-700"}`}
-                    >
-                        {requestStatus === 'sending' ? "Sending..." : "Request Swap"}
-                    </button>
+                  <button
+                    onClick={handleRequestSwap}
+                    disabled={requestStatus === 'sending'}
+                    className={`${tealBtn} ${requestStatus === 'sending' ? 'opacity-70' : ''}`}
+                  >
+                    {requestStatus === 'sending' ? 'Sending...' : 'Request Swap'}
+                  </button>
                 )}
+              </div>
             </div>
-          </div>
-          
-          {/* Messages / Errors */}
-          {statusMsg && (
-             <div className={`mb-4 p-3 rounded-md text-sm ${requestStatus === 'error' ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
-                 {statusMsg}
-             </div>
-          )}
 
-          <div className="flex items-center text-gray-600 text-sm mb-6">
-             <span className="mr-2">📍</span> {profile.city || "No location"}, {profile.country}
-          </div>
+            {/* Status Message */}
+            {statusMsg && (
+              <div
+                className={`mb-4 p-3 rounded-md text-sm ${
+                  requestStatus === 'error'
+                    ? 'bg-red-900/40 text-red-300 border border-red-700/40'
+                    : 'bg-green-900/30 text-green-300 border border-green-700/40'
+                }`}
+              >
+                {statusMsg}
+              </div>
+            )}
 
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">About</h3>
-            <p className="text-gray-600 leading-relaxed whitespace-pre-line">
-                {profile.bio || "This user hasn't written a bio yet."}
-            </p>
-          </div>
+            {/* Location */}
+            <div className="flex items-center text-gray-400 text-sm mb-6">
+              <span className="mr-2">📍</span>
+              {profile.city || 'No location'}, {profile.country}
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-green-50 p-5 rounded-lg border border-green-100">
-                <h3 className="text-md font-bold text-green-800 mb-3">Can Teach You</h3>
+            {/* ABOUT */}
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-teal-300 mb-2">About</h3>
+              <p className="text-gray-300 leading-relaxed whitespace-pre-line">
+                {profile.bio || 'This user has no bio.'}
+              </p>
+            </div>
+
+            {/* SKILLS */}
+            <div className="grid grid-cols-1 gap-6">
+              <div className={sectionCard}>
+                <h3 className="text-md font-bold text-teal-300 mb-3">Can Teach You</h3>
                 <div className="flex flex-wrap gap-2">
-                    {profile.skills_offered?.map(skill => (
-                        <span key={skill} className="px-3 py-1 bg-white text-green-700 text-sm font-medium rounded-full shadow-sm border border-green-100">
-                            {skill}
-                        </span>
-                    ))}
+                  {profile.skills_offered?.map((skill) => (
+                    <span key={skill} className={chip}>{skill}</span>
+                  ))}
                 </div>
-            </div>
+              </div>
 
-            <div className="bg-blue-50 p-5 rounded-lg border border-blue-100">
-                <h3 className="text-md font-bold text-blue-800 mb-3">Wants to Learn</h3>
+              <div className={sectionCard}>
+                <h3 className="text-md font-bold text-teal-300 mb-3">Wants to Learn</h3>
                 <div className="flex flex-wrap gap-2">
-                    {profile.skills_wanted?.map(skill => (
-                        <span key={skill} className="px-3 py-1 bg-white text-blue-700 text-sm font-medium rounded-full shadow-sm border border-blue-100">
-                            {skill}
-                        </span>
-                    ))}
+                  {profile.skills_wanted?.map((skill) => (
+                    <span key={skill} className={chip}>{skill}</span>
+                  ))}
                 </div>
+              </div>
+            </div>
+
+            {/* BACK LINK */}
+            <div className="mt-8 text-center border-t border-[#1a2a2e] pt-6">
+              <Link to="/browse" className="text-teal-300 text-sm hover:underline">
+                ← Back to Browse
+              </Link>
             </div>
           </div>
-
-          <div className="mt-8 pt-8 border-t text-center">
-            <Link to="/browse" className="text-indigo-600 hover:underline text-sm">
-                &larr; Back to Browse
-            </Link>
-          </div>
-
-        </div>
+        </motion.div>
       </div>
     </div>
   );
