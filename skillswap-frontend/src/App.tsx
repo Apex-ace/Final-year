@@ -1,5 +1,7 @@
 import { Routes, Route, useLocation } from "react-router-dom";
-import Navbar from "./components/Navbar";
+
+import BottomNav from "./components/BottomNav";   // <-- Correct import
+
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import ProfileEdit from "./pages/ProfileEdit";
@@ -12,26 +14,28 @@ import LandingPage from "./pages/LandingPage";
 export default function App() {
   const location = useLocation();
 
-  // Hide navbar on login page
-  const hideNavbar = location.pathname === "/";
+  // hide bottom nav on Login page only
+  const hideBottomNav = location.pathname === "/";
 
   return (
     <>
-      {!hideNavbar && <Navbar />}
-
+      {/* Main Page Routes */}
       <Routes>
-        <Route path="/home" element={<LandingPage />} />
         <Route path="/" element={<Login />} />
+        <Route path="/home" element={<LandingPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile/edit" element={<ProfileEdit />} />
         <Route path="/browse" element={<Browse />} />
         <Route path="/profile/:id" element={<PublicProfile />} />
 
-        {/* Chat Route */}
+        {/* Chat */}
         <Route path="/chat" element={<Chat />} />
 
         <Route path="*" element={<NotFound />} />
       </Routes>
+
+      {/* Bottom Navigation */}
+      {!hideBottomNav && <BottomNav />}  {/* <--- FIX: render AFTER Routes */}
     </>
   );
 }
