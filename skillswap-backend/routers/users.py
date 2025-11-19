@@ -1,6 +1,8 @@
+# skillswap-backend/routers/users.py
 from fastapi import APIRouter, Depends, HTTPException
-from services.supabase_client import supabase
+from services.supabase_client import supabase, supabase_admin
 from routers.auth import get_current_user
+from routers.chats import get_uid 
 from pydantic import BaseModel
 from typing import Optional, List
 
@@ -18,16 +20,15 @@ class ProfileUpdate(BaseModel):
 
 @router.get("/me")
 def get_my_profile(current=Depends(get_current_user)):
-    user = current["user"]
-    user_id = user.id
+    user_id = get_uid(current)
 
     profile = supabase.table("profiles").select("*").eq("id", user_id).single().execute()
 
     return {
         "ok": True,
         "profile": {
-            "id": user.id,
-            "email": user.email,
+            "id": user_id,
+            "email": current["user"].email,
             **(profile.data or {})
         }
     }
@@ -51,9 +52,7 @@ def get_public_profile(user_id: str):
 
 @router.put("/me")
 def update_my_profile(data: ProfileUpdate, current=Depends(get_current_user)):
-    user = current["user"]
-    user_id = user.id
-
+    user_id = get_uid(current)
     payload = {
         "id": user_id,
         "full_name": data.full_name,
@@ -66,5 +65,10 @@ def update_my_profile(data: ProfileUpdate, current=Depends(get_current_user)):
         "profile_image_url": data.profile_image_url
     }
 
-    res = supabase.table("profiles").upsert(payload).execute()
+    if supabase_admin is None:
+        raise HTTPException(status_code=500, detail="Server config error: Admin client missing.")
+
+    # Use supabase_admin for UPSERT to bypass the 'profiles' RLS policy
+    res = supabase_admin.table("profiles").upsert(payload).execute()
+
     return {"ok": True, "profile": res.data}

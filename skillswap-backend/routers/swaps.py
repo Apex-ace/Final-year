@@ -87,7 +87,7 @@ def respond_to_request(payload: SwapDecision, current=Depends(get_current_user))
     request_data = req_res.data[0]
     sender_id = request_data["sender_id"]
 
-    # 2. Update status (use regular client for INSERT/UPDATE)
+    # 2. Update status (use regular client for minor updates)
     new_status = "accepted" if payload.action == "accept" else "rejected"
     
     supabase.table("swap_requests") \
@@ -101,14 +101,13 @@ def respond_to_request(payload: SwapDecision, current=Depends(get_current_user))
     if new_status == "accepted":
         initial_msg = request_data.get("message")
         
-        # --- FIXED CRASH: Revert to two separate SELECTs for compatibility ---
-        # Check 1: Am I p1 and they p2?
+        # Check 1: Am I p1 and they p2? (Admin Client)
         c1 = supabase_admin.table("conversations").select("*") \
             .eq("participant1_id", user_id) \
             .eq("participant2_id", sender_id) \
             .execute()
             
-        # Check 2: Am I p2 and they p1?
+        # Check 2: Am I p2 and they p1? (Admin Client)
         c2 = supabase_admin.table("conversations").select("*") \
             .eq("participant1_id", sender_id) \
             .eq("participant2_id", user_id) \

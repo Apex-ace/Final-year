@@ -1,4 +1,3 @@
-# skillswap-backend/routers/chats.py
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, HTTPException
 from typing import Dict, List
 import json
@@ -65,7 +64,7 @@ def get_uid(current):
 
 
 # ------------------------------------------------------------
-# WEBSOCKET CHAT ENDPOINT (Uses Admin for message insert)
+# WEBSOCKET CHAT ENDPOINT (CRASH FIX APPLIED)
 # ------------------------------------------------------------
 @router.websocket("/ws/{conversation_id}")
 async def chat_ws(websocket: WebSocket, conversation_id: str):
@@ -96,24 +95,21 @@ async def chat_ws(websocket: WebSocket, conversation_id: str):
                  print("ERROR: Admin client not available for WS message insert.")
                  continue
 
-            saved = (
-                supabase_admin.table("messages")
-                .insert(msg)
-                .select("*")
-                .single()
-                .execute()
-            )
+            # --- FINAL CRASH FIX: Use basic insert and rely on array return ---
+            saved_resp = supabase_admin.table("messages").insert(msg).execute()
 
-            if saved.data:
-                await manager.broadcast(conversation_id, saved.data)
+            if saved_resp.data:
+                # Use the first element of the returned data array for broadcast
+                await manager.broadcast(conversation_id, saved_resp.data[0]) 
+            else:
+                 print("Warning: Message inserted but no data returned for broadcast.")
 
     except WebSocketDisconnect:
         manager.disconnect(websocket, conversation_id)
     except Exception as e:
+        # This will now catch runtime errors like the AttributeError
         print(f"WebSocket Error: {e}")
         manager.disconnect(websocket, conversation_id)
-
-
 # ------------------------------------------------------------
 # GET ALL CONVERSATIONS (RLS BYPASS)
 # ------------------------------------------------------------
