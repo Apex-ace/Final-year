@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+supabase
+httpx
+pytest
+pydantic
+python-multipart
+psycopg2-binary
+requests
+pydantic-settings
+websockets
