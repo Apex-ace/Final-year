@@ -11,6 +11,7 @@ import PublicProfile from "./pages/PublicProfile";
 import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
 import LandingPage from "./pages/LandingPage";
+import VideoCall from "./pages/VideoCall";  
 
 import useBackGesture from "./hooks/useBackGesture";
 
@@ -30,6 +31,8 @@ export default function App() {
         <Route path="/profile/:id" element={<PublicProfile />} />
         <Route path="/chat" element={<Chat />} />
         <Route path="*" element={<NotFound />} />
+        <Route path="/video-call" element={<VideoCall />} />
+
       </Routes>
 
       {!hideBottomNav && <BottomNav />}
