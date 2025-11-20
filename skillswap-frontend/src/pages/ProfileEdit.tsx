@@ -3,7 +3,7 @@ import { getMyProfile, updateMyProfile, getAllSkills } from "../lib/api";
 import { supabase } from "../lib/supabase";
 import MobileShell from "../components/MobileShell";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Check, Search } from "lucide-react";
+import { X, Check, Search, LogOut, AlertTriangle, Menu } from "lucide-react";
 
 export default function ProfileEdit() {
   const [profile, setProfile] = useState<any | null>(null);
@@ -16,6 +16,10 @@ export default function ProfileEdit() {
   // Modal state
   const [skillModalOpen, setSkillModalOpen] = useState<null | "offered" | "wanted">(null);
   const [skillSearch, setSkillSearch] = useState("");
+  
+  // Menu & Logout state
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   useEffect(() => {
     load();
@@ -87,6 +91,17 @@ export default function ProfileEdit() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      // Redirect to root (login)
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Error logging out", error);
+      setToast("Error logging out");
+    }
+  };
+
   const actionArea = (
     <button
       onClick={saveProfile}
@@ -106,6 +121,50 @@ export default function ProfileEdit() {
 
   return (
     <MobileShell title="Edit Profile" actionArea={actionArea}>
+      
+      {/* HEADER / HAMBURGER */}
+      <div className="relative flex justify-end items-center mb-4 z-30">
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
+          className="p-2 rounded-lg bg-[#0c1317] border border-[#1a2a2e] text-gray-400 hover:text-teal-300 transition-colors"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+
+        {/* DROPDOWN MENU */}
+        <AnimatePresence>
+          {menuOpen && (
+            <>
+              {/* Transparent Backdrop to close menu on click-outside */}
+              <div 
+                className="fixed inset-0 z-30" 
+                onClick={() => setMenuOpen(false)} 
+              />
+              
+              {/* The Menu */}
+              <motion.div
+                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                transition={{ duration: 0.15 }}
+                className="absolute top-12 right-0 w-48 bg-[#0b0f10] border border-[#1a2a2e] rounded-xl shadow-2xl z-40 overflow-hidden p-1.5"
+              >
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setShowLogoutConfirm(true);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-red-500/10 text-gray-300 hover:text-red-400 transition-colors text-sm font-medium"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Log Out
+                </button>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </div>
+
       {toast && (
         <div className="mb-3 text-center text-teal-300 bg-[#0c1317] border border-[#1a2a2e] py-2 rounded-xl">
           {toast}
@@ -262,7 +321,7 @@ export default function ProfileEdit() {
         </div>
       </div>
 
-      {/* MODAL */}
+      {/* SKILL MODAL */}
       <AnimatePresence>
         {skillModalOpen && (
           <motion.div
@@ -332,6 +391,50 @@ export default function ProfileEdit() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* LOGOUT CONFIRMATION MODAL */}
+      <AnimatePresence>
+        {showLogoutConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 z-50 flex justify-center items-center p-5"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full max-w-sm bg-[#0b0f10] border border-[#1a2a2e] rounded-2xl p-6 text-center shadow-2xl"
+            >
+              <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertTriangle className="text-red-400 w-6 h-6" />
+              </div>
+              
+              <h3 className="text-lg font-semibold text-white mb-2">Log Out?</h3>
+              <p className="text-gray-400 text-sm mb-6">
+                Are you sure you want to sign out? Any unsaved changes will be lost.
+              </p>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className="flex-1 py-3 rounded-xl bg-[#0c1317] border border-[#1a2a2e] text-gray-300 font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="flex-1 py-3 rounded-xl bg-red-500 text-white font-medium shadow-lg shadow-red-900/20"
+                >
+                  Log Out
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </MobileShell>
   );
 }
