@@ -1,311 +1,337 @@
-// ⚠️ IMPORTANT: All logic preserved exactly. Only UI themed & toast added.
-
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { getMyProfile, updateMyProfile, getAllSkills } from "../lib/api";
 import { supabase } from "../lib/supabase";
-import { motion } from "framer-motion";
-
-interface Skill {
-  id: string;
-  name: string;
-}
-
-interface Profile {
-  id: string;
-  full_name: string;
-  username: string;
-  city: string;
-  country: string;
-  bio: string;
-  skills_offered: string[];
-  skills_wanted: string[];
-  profile_image_url: string | null;
-}
+import MobileShell from "../components/MobileShell";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Check, Search } from "lucide-react";
 
 export default function ProfileEdit() {
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [loadingData, setLoadingData] = useState(true);
+  const [profile, setProfile] = useState<any | null>(null);
+  const [skills, setSkills] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [imageUploading, setImageUploading] = useState(false);
-
-  // 🔥 Toast state
+  const [uploading, setUploading] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+
+  // Modal state
+  const [skillModalOpen, setSkillModalOpen] = useState<null | "offered" | "wanted">(null);
+  const [skillSearch, setSkillSearch] = useState("");
 
   useEffect(() => {
     load();
   }, []);
 
-  // 🔥 Auto-hide toast
   useEffect(() => {
     if (toast) {
-      const timer = setTimeout(() => setToast(null), 2500);
-      return () => clearTimeout(timer);
+      const t = setTimeout(() => setToast(null), 2200);
+      return () => clearTimeout(t);
     }
   }, [toast]);
 
-  const load = async () => {
+  async function load() {
     try {
-      setLoadingData(true);
       const [p, s] = await Promise.all([getMyProfile(), getAllSkills()]);
       setProfile(p);
       setSkills(s);
-    } catch (error: any) {
-      console.error("❌ FULL LOAD ERROR:", error);
-      setToast("Failed to load profile data.");
+    } catch (e) {
+      console.error(e);
+      setToast("Failed to load profile");
     } finally {
-      setLoadingData(false);
+      setLoading(false);
     }
-  };
+  }
 
-  const handleTextChange = (e: any) => {
+  function toggleSkill(name: string, field: "skills_offered" | "skills_wanted") {
     if (!profile) return;
-    setProfile({ ...profile, [e.target.name]: e.target.value });
-  };
+    const list = profile[field] || [];
+    const exists = list.includes(name);
+    const updated = exists ? list.filter((s: string) => s !== name) : [...list, name];
+    setProfile({ ...profile, [field]: updated });
+  }
 
-  const handleMultiSelectChange = (
-    e: any,
-    field: "skills_offered" | "skills_wanted"
-  ) => {
+  const handleImage = async (e: any) => {
     if (!profile) return;
-    const values = Array.from(e.target.selectedOptions, (o: any) => o.value);
-    setProfile({ ...profile, [field]: values });
-  };
-
-  const handleImageUpload = async (e: any) => {
-    if (!e.target.files?.length || !profile) return;
-
     const file = e.target.files[0];
+    if (!file) return;
     const ext = file.name.split(".").pop();
     const fileName = `${profile.id}-${Date.now()}.${ext}`;
 
     try {
-      setImageUploading(true);
-
+      setUploading(true);
       const { error } = await supabase.storage
         .from("profile-images")
         .upload(fileName, file, { upsert: true });
-
       if (error) throw error;
-
       const { data } = supabase.storage
         .from("profile-images")
         .getPublicUrl(fileName);
 
       setProfile({ ...profile, profile_image_url: data.publicUrl });
       setToast("Profile image updated!");
-    } catch (error) {
-      console.error("Upload error:", error);
-      setToast("Image upload failed.");
+    } catch {
+      setToast("Image upload failed");
     } finally {
-      setImageUploading(false);
+      setUploading(false);
     }
   };
 
   const saveProfile = async () => {
-    if (!profile) return;
-
     try {
       setSaving(true);
       await updateMyProfile(profile);
-      setToast("Profile updated successfully!");
-    } catch (error) {
-      console.error("Save error:", error);
-      setToast("Failed to save profile.");
+      setToast("Profile updated");
+    } catch {
+      setToast("Failed to save");
     } finally {
       setSaving(false);
     }
   };
 
-  if (loadingData)
-    return <div className="text-center text-gray-400 p-10">Loading profile...</div>;
-  if (!profile)
-    return <div className="text-center text-red-500 p-10">Error loading profile.</div>;
+  const actionArea = (
+    <button
+      onClick={saveProfile}
+      disabled={saving}
+      className="w-full py-3 rounded-xl bg-gradient-to-br from-[#00e6c3] to-[#009f82] text-black font-semibold shadow-md"
+    >
+      {saving ? "Saving..." : "Save Profile"}
+    </button>
+  );
 
-  // THEME (WhatsApp AMOLED)
-    const screen = "min-h-screen bg-[#050505] text-gray-200 px-5 safe-top pb-6";
-    const card =
-    "w-full bg-[#0b0f10]/80 backdrop-blur-xl border border-[#10191c] rounded-2xl p-6 shadow-xl";
-  const label = "text-sm text-gray-400 mb-1 block";
-  const inputBox =
-    "w-full px-4 py-3 bg-[#0c1317] border border-[#1a2a2e] rounded-xl text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-400";
-  const selectBox =
-    "w-full h-32 px-3 py-2 bg-[#0c1317] border border-[#1a2a2e] text-gray-200 rounded-xl focus:ring-2 focus:ring-teal-400";
-  const tealBtn =
-    "w-full py-3 rounded-xl bg-gradient-to-br from-[#00e6c3] to-[#009f82] text-black font-semibold shadow-xl active:scale-95 transition";
+  if (loading)
+    return (
+      <div className="text-center text-gray-400 p-10">Loading profile...</div>
+    );
+
+  const card = "rounded-2xl bg-[#0b0f10]/80 border border-[#10191c] p-5";
 
   return (
-    <div className={screen}>
-
-      {/* 🔥 Toast Popup */}
+    <MobileShell title="Edit Profile" actionArea={actionArea}>
       {toast && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          className="
-            fixed top-5 left-1/2 -translate-x-1/2 
-            bg-[#0c1317] border border-[#1a2a2e] 
-            text-teal-300 px-5 py-3 rounded-xl 
-            shadow-xl z-50 text-sm font-medium
-          "
-        >
+        <div className="mb-3 text-center text-teal-300 bg-[#0c1317] border border-[#1a2a2e] py-2 rounded-xl">
           {toast}
-        </motion.div>
+        </div>
       )}
 
-      <motion.h2
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-xl font-bold text-teal-300 text-center mb-6"
-      >
-        Edit Profile
-      </motion.h2>
+      {/* PROFILE IMAGE */}
+      <div className={card}>
+        <p className="text-sm text-gray-400 mb-2">Profile Image</p>
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <img
+              src={
+                profile.profile_image_url ||
+                "https://api.dicebear.com/7.x/initials/svg?seed=User"
+              }
+              className="h-20 w-20 rounded-full object-cover border border-[#1a2a2e]"
+            />
+            {uploading && (
+              <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center text-xs">
+                Uploading...
+              </div>
+            )}
+          </div>
+          <label className="bg-[#0c1317] border border-[#1a2a2e] px-4 py-2 rounded-xl text-sm cursor-pointer text-gray-300">
+            Choose File
+            <input
+              type="file"
+              className="hidden"
+              accept="image/*"
+              onChange={handleImage}
+            />
+          </label>
+        </div>
+      </div>
 
-      <div className="max-w-md mx-auto space-y-6">
+      {/* BASIC INFO */}
+      <div className={`${card} mt-5 space-y-4`}>
+        <div>
+          <p className="text-sm text-gray-400 mb-1">Full Name</p>
+          <input
+            className="w-full bg-[#0c1317] border border-[#1a2a2e] rounded-xl px-4 py-3"
+            value={profile.full_name}
+            onChange={(e) =>
+              setProfile({ ...profile, full_name: e.target.value })
+            }
+          />
+        </div>
+
+        <div>
+          <p className="text-sm text-gray-400 mb-1">Username</p>
+          <input
+            className="w-full bg-[#0c1317] border border-[#1a2a2e] rounded-xl px-4 py-3"
+            value={profile.username}
+            onChange={(e) =>
+              setProfile({ ...profile, username: e.target.value })
+            }
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p className="text-sm text-gray-400 mb-1">City</p>
+            <input
+              className="w-full bg-[#0c1317] border border-[#1a2a2e] rounded-xl px-4 py-3"
+              value={profile.city}
+              onChange={(e) =>
+                setProfile({ ...profile, city: e.target.value })
+              }
+            />
+          </div>
+
+          <div>
+            <p className="text-sm text-gray-400 mb-1">Country</p>
+            <input
+              className="w-full bg-[#0c1317] border border-[#1a2a2e] rounded-xl px-4 py-3"
+              value={profile.country}
+              onChange={(e) =>
+                setProfile({ ...profile, country: e.target.value })
+              }
+            />
+          </div>
+        </div>
+
+        <div>
+          <p className="text-sm text-gray-400 mb-1">Bio</p>
+          <textarea
+            className="w-full bg-[#0c1317] border border-[#1a2a2e] rounded-xl px-4 py-3"
+            rows={4}
+            value={profile.bio}
+            onChange={(e) =>
+              setProfile({ ...profile, bio: e.target.value })
+            }
+          />
+        </div>
+      </div>
+
+      {/* SKILLS */}
+      <div className="mt-5 space-y-5">
+        {/* Offered */}
         <div className={card}>
-          <div className="space-y-6">
-
-            {/* NAME */}
-            <div>
-              <label className={label}>Name</label>
-              <input
-                name="full_name"
-                className={inputBox}
-                value={profile.full_name}
-                onChange={handleTextChange}
-              />
-            </div>
-
-            {/* USERNAME */}
-            <div>
-              <label className={label}>Username</label>
-              <input
-                name="username"
-                className={inputBox}
-                value={profile.username}
-                onChange={handleTextChange}
-              />
-            </div>
-
-            {/* LOCATION */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className={label}>City</label>
-                <input
-                  name="city"
-                  className={inputBox}
-                  value={profile.city}
-                  onChange={handleTextChange}
-                />
-              </div>
-
-              <div>
-                <label className={label}>Country</label>
-                <input
-                  name="country"
-                  className={inputBox}
-                  value={profile.country}
-                  onChange={handleTextChange}
-                />
-              </div>
-            </div>
-
-            {/* BIO */}
-            <div>
-              <label className={label}>Bio</label>
-              <textarea
-                name="bio"
-                rows={4}
-                className={inputBox}
-                value={profile.bio}
-                onChange={handleTextChange}
-              />
-            </div>
-
-            {/* SKILLS */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className={label}>Skills Offered</label>
-                <select
-                  multiple
-                  className={selectBox}
-                  value={profile.skills_offered}
-                  onChange={(e) => handleMultiSelectChange(e, "skills_offered")}
-                >
-                  {skills.map((s) => (
-                    <option key={s.id} value={s.name}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className={label}>Skills Wanted</label>
-                <select
-                  multiple
-                  className={selectBox}
-                  value={profile.skills_wanted}
-                  onChange={(e) => handleMultiSelectChange(e, "skills_wanted")}
-                >
-                  {skills.map((s) => (
-                    <option key={s.id} value={s.name}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* PROFILE IMAGE */}
-            <div>
-              <label className={label}>Profile Image</label>
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  {profile.profile_image_url ? (
-                    <img
-                      src={profile.profile_image_url}
-                      alt="Profile"
-                      className="h-20 w-20 rounded-full object-cover border border-[#1a2a2e]"
-                    />
-                  ) : (
-                    <div className="h-20 w-20 rounded-full bg-[#0c1317] border border-[#1a2a2e] flex items-center justify-center text-gray-500 text-xs">
-                      No Img
-                    </div>
-                  )}
-
-                  {imageUploading && (
-                    <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center text-xs text-white">
-                      Uploading...
-                    </div>
-                  )}
-                </div>
-
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  disabled={imageUploading}
-                  className="text-sm text-gray-400"
-                />
-              </div>
-            </div>
-
-            {/* SAVE BUTTON */}
+          <div className="flex justify-between items-center">
+            <p className="text-sm text-gray-400">Skills Offered</p>
             <button
-              onClick={saveProfile}
-              disabled={saving || imageUploading}
-              className={`${tealBtn} ${
-                saving || imageUploading ? "opacity-60 cursor-not-allowed" : ""
-              }`}
+              onClick={() => setSkillModalOpen("offered")}
+              className="text-teal-300 text-sm"
             >
-              {saving ? "Saving..." : "Save Profile"}
+              + Add
             </button>
+          </div>
 
+          <div className="flex flex-wrap mt-3 gap-2">
+            {profile.skills_offered?.map((skill: string) => (
+              <span
+                key={skill}
+                className="px-3 py-1 rounded-full bg-[#0f1b1d] border border-[#1a2a2e] text-teal-300 text-xs flex items-center gap-2"
+              >
+                {skill}
+                <X
+                  className="w-3 h-3 cursor-pointer"
+                  onClick={() => toggleSkill(skill, "skills_offered")}
+                />
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Wanted */}
+        <div className={card}>
+          <div className="flex justify-between items-center">
+            <p className="text-sm text-gray-400">Skills Wanted</p>
+            <button
+              onClick={() => setSkillModalOpen("wanted")}
+              className="text-teal-300 text-sm"
+            >
+              + Add
+            </button>
+          </div>
+
+          <div className="flex flex-wrap mt-3 gap-2">
+            {profile.skills_wanted?.map((skill: string) => (
+              <span
+                key={skill}
+                className="px-3 py-1 rounded-full bg-[#0f1b1d] border border-[#1a2a2e] text-teal-300 text-xs flex items-center gap-2"
+              >
+                {skill}
+                <X
+                  className="w-3 h-3 cursor-pointer"
+                  onClick={() => toggleSkill(skill, "skills_wanted")}
+                />
+              </span>
+            ))}
           </div>
         </div>
       </div>
-    </div>
+
+      {/* MODAL */}
+      <AnimatePresence>
+        {skillModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 z-50 flex justify-center items-end"
+          >
+            <motion.div
+              initial={{ y: 300 }}
+              animate={{ y: 0 }}
+              exit={{ y: 300 }}
+              className="w-full max-w-md bg-[#0b0f10] rounded-t-2xl p-5 border-t border-[#1a2a2e]"
+            >
+              <div className="flex justify-between items-center mb-4">
+                <p className="text-teal-300 font-semibold">Select Skills</p>
+                <X
+                  className="text-gray-300 cursor-pointer"
+                  onClick={() => setSkillModalOpen(null)}
+                />
+              </div>
+
+              {/* Search */}
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
+                <input
+                  placeholder="Search skills..."
+                  value={skillSearch}
+                  onChange={(e) => setSkillSearch(e.target.value)}
+                  className="w-full bg-[#0c1317] border border-[#1a2a2e] rounded-xl px-8 py-2 text-gray-200"
+                />
+              </div>
+
+              {/* Skill list */}
+              <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
+                {skills
+                  .filter((s) =>
+                    s.name.toLowerCase().includes(skillSearch.toLowerCase())
+                  )
+                  .map((s) => {
+                    const selected = profile[
+                      skillModalOpen === "offered"
+                        ? "skills_offered"
+                        : "skills_wanted"
+                    ]?.includes(s.name);
+
+                    return (
+                      <div
+                        key={s.id}
+                        onClick={() =>
+                          toggleSkill(
+                            s.name,
+                            skillModalOpen === "offered"
+                              ? "skills_offered"
+                              : "skills_wanted"
+                          )
+                        }
+                        className="flex items-center justify-between bg-[#0c1317] border border-[#1a2a2e] px-4 py-3 rounded-xl cursor-pointer"
+                      >
+                        <span className="text-gray-200">{s.name}</span>
+                        {selected && <Check className="text-teal-300" />}
+                      </div>
+                    );
+                  })}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </MobileShell>
   );
 }

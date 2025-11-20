@@ -1,7 +1,8 @@
+// src/App.tsx
+import React from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 
-import BottomNav from "./components/BottomNav";   // <-- Correct import
-
+import BottomNav from "./components/BottomNav";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import ProfileEdit from "./pages/ProfileEdit";
@@ -11,15 +12,15 @@ import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
 import LandingPage from "./pages/LandingPage";
 
-export default function App() {
-  const location = useLocation();
+import useBackGesture from "./hooks/useBackGesture";
 
-  // hide bottom nav on Login page only
+export default function App() {
+  useBackGesture(true);
+  const location = useLocation();
   const hideBottomNav = location.pathname === "/";
 
   return (
     <>
-      {/* Main Page Routes */}
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/home" element={<LandingPage />} />
@@ -27,15 +28,11 @@ export default function App() {
         <Route path="/profile/edit" element={<ProfileEdit />} />
         <Route path="/browse" element={<Browse />} />
         <Route path="/profile/:id" element={<PublicProfile />} />
-
-        {/* Chat */}
         <Route path="/chat" element={<Chat />} />
-
         <Route path="*" element={<NotFound />} />
       </Routes>
 
-      {/* Bottom Navigation */}
-      {!hideBottomNav && <BottomNav />}  {/* <--- FIX: render AFTER Routes */}
+      {!hideBottomNav && <BottomNav />}
     </>
   );
 }
