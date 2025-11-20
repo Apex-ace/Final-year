@@ -1,33 +1,70 @@
 // src/pages/Login.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { motion } from "framer-motion";
 import MobileShell from "../components/MobileShell";
+import FullPageLoader from "../components/FullPageLoader";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
+  
+  // Start loading to check for existing session
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        // If logged in, redirect immediately
+        window.location.href = "/dashboard";
+      } else {
+        // If not, show the login form
+        setLoading(false);
+      }
+    };
+    checkSession();
+  }, []);
 
   const sendOTP = async (e: any) => {
     e.preventDefault();
     setError("");
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: true },
-    });
-    if (error) return setError(error.message);
-    setOtpSent(true);
+    setLoading(true); // Show loader
+    
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { shouldCreateUser: true },
+      });
+      if (error) throw error;
+      setOtpSent(true);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const verifyOTP = async (e: any) => {
     e.preventDefault();
     setError("");
-    const { error } = await supabase.auth.verifyOtp({ email, token: otp, type: "email" });
-    if (error) return setError(error.message);
-    window.location.href = "/dashboard";
+    setLoading(true); // Show loader
+    
+    try {
+      const { error } = await supabase.auth.verifyOtp({ email, token: otp, type: "email" });
+      if (error) throw error;
+      window.location.href = "/dashboard";
+      // Keep loading true to prevent flash before redirect
+    } catch (err: any) {
+      setError(err.message);
+      setLoading(false);
+    }
   };
+
+  // --- SHOW LOADER IF ACTIVE ---
+  if (loading) return <FullPageLoader />;
 
   const card = "w-full max-w-sm bg-[#0b0f10]/80 backdrop-blur-xl border border-[#10191c] rounded-2xl p-6 shadow-xl";
   const inputBox = "w-full px-4 py-3 bg-[#0c1317] border border-[#1a2a2e] rounded-xl text-gray-200 placeholder-gray-500 focus:outline-none";

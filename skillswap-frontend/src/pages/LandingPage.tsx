@@ -1,8 +1,8 @@
-// src/pages/LandingPage.tsx
 import React, { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { Link } from "react-router-dom";
 import MobileShell from "../components/MobileShell";
+import FullPageLoader from "../components/FullPageLoader"; // Import
 
 export default function LandingPage() {
   const [profile, setProfile] = useState<any | null>(null);
@@ -23,7 +23,8 @@ export default function LandingPage() {
     }
   };
 
-  if (loading) return <div className="min-h-screen bg-[#050505] text-gray-400 flex items-center justify-center">Loading...</div>;
+  // --- UPDATED ---
+  if (loading) return <FullPageLoader />;
 
   return (
     <MobileShell title="Welcome" showBack={false}>

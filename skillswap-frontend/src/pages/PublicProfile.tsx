@@ -1,9 +1,9 @@
-// src/pages/PublicProfile.tsx
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { api } from "../lib/api";
 import { supabase } from "../lib/supabase";
 import MobileShell from "../components/MobileShell";
+import FullPageLoader from "../components/FullPageLoader"; // Import
 
 export default function PublicProfile() {
   const { id } = useParams();
@@ -12,6 +12,7 @@ export default function PublicProfile() {
   const [requestStatus, setRequestStatus] = useState("idle");
   const [statusMsg, setStatusMsg] = useState("");
 
+  // ... useEffect remains the same ...
   useEffect(() => {
     const fetchProfile = async () => {
       if (!id) return;
@@ -29,6 +30,7 @@ export default function PublicProfile() {
   }, [id]);
 
   const handleRequestSwap = async () => {
+    // ... function body remains the same ...
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return setStatusMsg("Please log in first.");
 
@@ -48,11 +50,13 @@ export default function PublicProfile() {
     }
   };
 
-  if (loading) return <div className="text-center text-gray-400 mt-20">Loading profile...</div>;
+  // --- UPDATED ---
+  if (loading) return <FullPageLoader />;
   if (!profile) return <div className="text-center text-red-500 mt-20">User not found.</div>;
 
   return (
     <MobileShell title="Profile" showBack={true}>
+      {/* ... rest of render logic remains exactly the same ... */}
       <div className="max-w-md mx-auto">
 
         {/* HEADER CARD */}
@@ -106,7 +110,7 @@ export default function PublicProfile() {
             <div className="p-4 rounded-xl bg-[#0b1113] border border-[#1a2a2e]">
               <h3 className="text-md font-bold text-teal-300 mb-2">Can Give</h3>
               <div className="flex flex-wrap gap-2">
-                {profile.skills_offered?.map((skill) => (
+                {profile.skills_offered?.map((skill: any) => (
                   <span
                     key={skill}
                     className="px-3 py-1 bg-[#111c20] border border-[#1f2f33] text-teal-300 text-xs rounded-full"
@@ -121,7 +125,7 @@ export default function PublicProfile() {
             <div className="p-4 rounded-xl bg-[#0b1113] border border-[#1a2a2e]">
               <h3 className="text-md font-bold text-teal-300 mb-2">Needs</h3>
               <div className="flex flex-wrap gap-2">
-                {profile.skills_wanted?.map((skill) => (
+                {profile.skills_wanted?.map((skill: any) => (
                   <span
                     key={skill}
                     className="px-3 py-1 bg-[#111c20] border border-[#1f2f33] text-teal-300 text-xs rounded-full"

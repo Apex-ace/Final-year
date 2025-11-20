@@ -4,23 +4,22 @@ import { supabase } from "../lib/supabase";
 import MobileShell from "../components/MobileShell";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Check, Search, LogOut, AlertTriangle, Menu } from "lucide-react";
+import FullPageLoader from "../components/FullPageLoader"; // Import
 
 export default function ProfileEdit() {
   const [profile, setProfile] = useState<any | null>(null);
   const [skills, setSkills] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  // ... state definitions remain ...
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-
-  // Modal state
   const [skillModalOpen, setSkillModalOpen] = useState<null | "offered" | "wanted">(null);
   const [skillSearch, setSkillSearch] = useState("");
-  
-  // Menu & Logout state
   const [menuOpen, setMenuOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
+  // ... useEffects and functions remain exactly the same ...
   useEffect(() => {
     load();
   }, []);
@@ -94,7 +93,6 @@ export default function ProfileEdit() {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      // Redirect to root (login)
       window.location.href = "/";
     } catch (error) {
       console.error("Error logging out", error);
@@ -112,15 +110,14 @@ export default function ProfileEdit() {
     </button>
   );
 
-  if (loading)
-    return (
-      <div className="text-center text-gray-400 p-10">Loading profile...</div>
-    );
+  // --- UPDATED ---
+  if (loading) return <FullPageLoader />;
 
   const card = "rounded-2xl bg-[#0b0f10]/80 border border-[#10191c] p-5";
 
   return (
     <MobileShell title="Edit Profile" actionArea={actionArea}>
+      {/* ... rest of your ProfileEdit render code remains exactly the same ... */}
       
       {/* HEADER / HAMBURGER */}
       <div className="relative flex justify-end items-center mb-4 z-30">

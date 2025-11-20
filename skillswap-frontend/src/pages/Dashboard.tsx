@@ -1,9 +1,10 @@
-// src/pages/Dashboard.tsx
 import React, { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import MobileShell from "../components/MobileShell";
+// Import the loader
+import FullPageLoader from "../components/FullPageLoader";
 
 export default function Dashboard() {
   const [profile, setProfile] = useState<any>(null);
@@ -51,10 +52,12 @@ export default function Dashboard() {
     }
   };
 
-  if (loading) return <div className="text-center text-gray-400 p-10">Loading Dashboard...</div>;
+  // --- UPDATED: Use FullPageLoader ---
+  if (loading) return <FullPageLoader />;
 
   return (
     <MobileShell title="Dashboard" showBack={false}>
+      {/* ... rest of your dashboard code remains exactly the same ... */}
       <div className="space-y-6">
         <div className="p-4 bg-[#0b0f10]/80 border border-[#10191c] rounded-2xl">
           <div className="flex items-center justify-between">
