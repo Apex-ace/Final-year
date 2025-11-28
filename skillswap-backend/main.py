@@ -22,6 +22,7 @@ app.include_router(reviews.router, prefix="/reviews", tags=["reviews"])
 app.include_router(extras.router, prefix="/extras", tags=["extras"])
 app.include_router(swaps.router, prefix="/swaps", tags=["Swaps"])
 app.include_router(search.router, prefix="/search", tags=["search"])
+app.include_router(work.router, prefix="/work", tags=["Work"])
 
 @app.get("/")
 def root():

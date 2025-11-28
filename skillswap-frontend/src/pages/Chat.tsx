@@ -168,8 +168,9 @@ export default function ChatMobile() {
   // --------------------------------------
   // UI
   // --------------------------------------
+  // UPDATED: Changed bottom-[70px] to bottom-[80px] to lift the container up
   return (
-    <div className="fixed top-0 left-0 right-0 bottom-[70px] flex flex-col bg-[#050505]">
+    <div className="fixed top-0 left-0 right-0 bottom-[80px] flex flex-col bg-[#050505]">
 
       {/* Incoming Call */}
       {incomingCall && (
@@ -269,7 +270,8 @@ export default function ChatMobile() {
       </div>
 
       {/* Input Bar */}
-      <div className="shrink-0 w-full px-3 py-3 bg-[#050505] border-t border-[#0b1113]">
+      {/* UPDATED: Added pb-5 to lift the input box up visually */}
+      <div className="shrink-0 w-full px-3 pt-3 pb-5 bg-[#050505] border-t border-[#0b1113]">
         <form onSubmit={sendMessage} className="flex items-center gap-2">
           <button type="button" className="p-2 rounded-full bg-[#0f1a1c] text-gray-400">
             +

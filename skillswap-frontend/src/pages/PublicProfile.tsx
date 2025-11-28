@@ -4,15 +4,13 @@ import { api } from "../lib/api";
 import { supabase } from "../lib/supabase";
 import MobileShell from "../components/MobileShell";
 import FullPageLoader from "../components/FullPageLoader"; // Import
-
 export default function PublicProfile() {
   const { id } = useParams();
   const [profile, setProfile] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
-  const [requestStatus, setRequestStatus] = useState("idle");
+  const [requestStatus, setRequestStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [statusMsg, setStatusMsg] = useState("");
 
-  // ... useEffect remains the same ...
   useEffect(() => {
     const fetchProfile = async () => {
       if (!id) return;
@@ -30,17 +28,19 @@ export default function PublicProfile() {
   }, [id]);
 
   const handleRequestSwap = async () => {
-    // ... function body remains the same ...
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return setStatusMsg("Please log in first.");
 
-    if (user.id === profile?.id) return setStatusMsg("You can't swap with yourself.");
+    if (user.id === profile?.id)
+      return setStatusMsg("You can't swap with yourself.");
 
     try {
       setRequestStatus("sending");
       await api.post("/swaps/request", {
         receiver_id: profile?.id,
-        message: `Hi ${profile?.full_name}, I'd like to swap skills!`
+        message: `Hi ${profile?.full_name}, I'd like to swap skills!`,
       });
       setRequestStatus("success");
       setStatusMsg("Request Sent ✓");
@@ -50,22 +50,21 @@ export default function PublicProfile() {
     }
   };
 
-  // --- UPDATED ---
   if (loading) return <FullPageLoader />;
-  if (!profile) return <div className="text-center text-red-500 mt-20">User not found.</div>;
+  if (!profile)
+    return (
+      <div className="text-center text-red-500 mt-20">User not found.</div>
+    );
 
   return (
     <MobileShell title="Profile" showBack={true}>
-      {/* ... rest of render logic remains exactly the same ... */}
       <div className="max-w-md mx-auto">
-
         {/* HEADER CARD */}
         <div className="bg-[#0c1317] rounded-2xl overflow-hidden border border-[#1a2a2e] shadow-xl">
-          
-          {/* Cover Background */}
+          {/* Cover */}
           <div className="h-40 w-full bg-gradient-to-br from-[#003b36] to-[#001915]" />
 
-          {/* Profile Image */}
+          {/* Profile Image + Basic Info */}
           <div className="-mt-20 px-5 relative">
             <div className="flex items-end gap-5">
               <div className="h-32 w-32 rounded-2xl ring-4 ring-[#050505] bg-black overflow-hidden border border-[#1a2a2e] shadow-lg">
@@ -82,9 +81,10 @@ export default function PublicProfile() {
                 )}
               </div>
 
-              {/* Basic Info */}
               <div className="pb-3">
-                <h1 className="text-2xl font-bold text-teal-300">{profile.full_name}</h1>
+                <h1 className="text-2xl font-bold text-teal-300">
+                  {profile.full_name}
+                </h1>
                 <p className="text-sm text-gray-400">@{profile.username}</p>
               </div>
             </div>
@@ -95,18 +95,18 @@ export default function PublicProfile() {
             📍 {profile.city || "Unknown"}, {profile.country}
           </div>
 
-          {/* About Section */}
+          {/* About */}
           <div className="px-5 mt-6 mb-6">
-            <h3 className="text-lg font-semibold text-teal-300 mb-2">About</h3>
+            <h3 className="text-lg font-semibold text-teal-300 mb-2">
+              About
+            </h3>
             <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-line">
               {profile.bio || "This user has no bio."}
             </p>
           </div>
 
-          {/* SKILLS */}
+          {/* Skills */}
           <div className="px-5 space-y-5 pb-6">
-            
-            {/* Can Give (was Can Teach You) */}
             <div className="p-4 rounded-xl bg-[#0b1113] border border-[#1a2a2e]">
               <h3 className="text-md font-bold text-teal-300 mb-2">Can Give</h3>
               <div className="flex flex-wrap gap-2">
@@ -121,7 +121,6 @@ export default function PublicProfile() {
               </div>
             </div>
 
-            {/* Needs (was Wants to Learn) */}
             <div className="p-4 rounded-xl bg-[#0b1113] border border-[#1a2a2e]">
               <h3 className="text-md font-bold text-teal-300 mb-2">Needs</h3>
               <div className="flex flex-wrap gap-2">
@@ -135,11 +134,10 @@ export default function PublicProfile() {
                 ))}
               </div>
             </div>
-
           </div>
 
-          {/* Request Button */}
-          <div className="px-5 pb-6">
+          {/* Actions: Request Swap + Open Workspace */}
+          <div className="px-5 pb-6 space-y-3">
             {requestStatus === "success" ? (
               <button
                 disabled
@@ -156,13 +154,26 @@ export default function PublicProfile() {
                 {requestStatus === "sending" ? "Sending..." : "Request Swap"}
               </button>
             )}
-          </div>
 
+            {/* NEW: Open Workspace (per-profile) */}
+            <Link
+              to={`/work?u=${profile.id}`}
+              className="block w-full text-center py-3 rounded-xl bg-[#0c1317] border border-[#1a2a2e] text-teal-300 text-sm"
+            >
+              Open Workspace
+            </Link>
+
+            {statusMsg && (
+              <p className="text-xs text-gray-400 pt-1">{statusMsg}</p>
+            )}
+          </div>
         </div>
 
         {/* Back to browse */}
         <div className="text-center pt-5">
-          <Link to="/browse" className="text-teal-300 text-sm">← Back to Browse</Link>
+          <Link to="/browse" className="text-teal-300 text-sm">
+            ← Back to Browse
+          </Link>
         </div>
       </div>
     </MobileShell>

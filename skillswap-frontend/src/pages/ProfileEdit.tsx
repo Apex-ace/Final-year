@@ -1,16 +1,16 @@
+// src/pages/ProfileEdit.tsx
 import React, { useEffect, useState } from "react";
 import { getMyProfile, updateMyProfile, getAllSkills } from "../lib/api";
 import { supabase } from "../lib/supabase";
 import MobileShell from "../components/MobileShell";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Check, Search, LogOut, AlertTriangle, Menu } from "lucide-react";
-import FullPageLoader from "../components/FullPageLoader"; // Import
+import FullPageLoader from "../components/FullPageLoader";
 
 export default function ProfileEdit() {
   const [profile, setProfile] = useState<any | null>(null);
   const [skills, setSkills] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  // ... state definitions remain ...
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -19,7 +19,6 @@ export default function ProfileEdit() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-  // ... useEffects and functions remain exactly the same ...
   useEffect(() => {
     load();
   }, []);
@@ -110,14 +109,12 @@ export default function ProfileEdit() {
     </button>
   );
 
-  // --- UPDATED ---
   if (loading) return <FullPageLoader />;
 
   const card = "rounded-2xl bg-[#0b0f10]/80 border border-[#10191c] p-5";
 
   return (
     <MobileShell title="Edit Profile" actionArea={actionArea}>
-      {/* ... rest of your ProfileEdit render code remains exactly the same ... */}
       
       {/* HEADER / HAMBURGER */}
       <div className="relative flex justify-end items-center mb-4 z-30">
@@ -132,13 +129,11 @@ export default function ProfileEdit() {
         <AnimatePresence>
           {menuOpen && (
             <>
-              {/* Transparent Backdrop to close menu on click-outside */}
               <div 
                 className="fixed inset-0 z-30" 
                 onClick={() => setMenuOpen(false)} 
               />
               
-              {/* The Menu */}
               <motion.div
                 initial={{ opacity: 0, y: -10, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -318,7 +313,7 @@ export default function ProfileEdit() {
         </div>
       </div>
 
-      {/* SKILL MODAL */}
+      {/* SKILL MODAL (UPDATED to 90% height) */}
       <AnimatePresence>
         {skillModalOpen && (
           <motion.div
@@ -328,12 +323,14 @@ export default function ProfileEdit() {
             className="fixed inset-0 bg-black/60 z-50 flex justify-center items-end"
           >
             <motion.div
-              initial={{ y: 300 }}
+              initial={{ y: "100%" }}
               animate={{ y: 0 }}
-              exit={{ y: 300 }}
-              className="w-full max-w-md bg-[#0b0f10] rounded-t-2xl p-5 border-t border-[#1a2a2e]"
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              // UPDATED: Added h-[90vh] and flex-col
+              className="w-full h-[90vh] bg-[#0b0f10] rounded-t-2xl p-5 border-t border-[#1a2a2e] flex flex-col"
             >
-              <div className="flex justify-between items-center mb-4">
+              <div className="flex justify-between items-center mb-4 shrink-0">
                 <p className="text-teal-300 font-semibold">Select Skills</p>
                 <X
                   className="text-gray-300 cursor-pointer"
@@ -342,7 +339,7 @@ export default function ProfileEdit() {
               </div>
 
               {/* Search */}
-              <div className="relative mb-4">
+              <div className="relative mb-4 shrink-0">
                 <Search className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
                 <input
                   placeholder="Search skills..."
@@ -352,8 +349,8 @@ export default function ProfileEdit() {
                 />
               </div>
 
-              {/* Skill list */}
-              <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
+              {/* Skill list - UPDATED: Changed max-h to flex-1 for full expansion */}
+              <div className="flex-1 overflow-y-auto space-y-2 pr-1">
                 {skills
                   .filter((s) =>
                     s.name.toLowerCase().includes(skillSearch.toLowerCase())
