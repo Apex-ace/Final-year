@@ -82,6 +82,62 @@ async def chat_ws(websocket: WebSocket, conversation_id: str):
             data = json.loads(raw)
 
             content = data.get("content")
+
+            if not content:
+                continue
+
+            # 🔥 FIX: HANDLE STRING OR JSON FORMAT
+            if isinstance(content, str):
+                content = {
+                    "type": "text",
+                    "text": content
+                }
+
+            # 🔥 SAFETY: if bad object
+            if isinstance(content, dict) and "type" not in content:
+                content = {
+                    "type": "text",
+                    "text": str(content)
+                }
+
+            msg = {
+                "conversation_id": conversation_id,
+                "sender_id": user_id,
+                "content": content,
+            }
+
+            if supabase_admin is None:
+                print("ERROR: Admin client not available")
+                continue
+
+            saved_resp = supabase_admin.table("messages").insert(msg).execute()
+
+            if saved_resp.data:
+                await manager.broadcast(conversation_id, saved_resp.data[0])
+            else:
+                print("Warning: Message inserted but no data returned")
+
+    except WebSocketDisconnect:
+        manager.disconnect(websocket, conversation_id)
+
+    except Exception as e:
+        print(f"WebSocket Error: {e}")
+        manager.disconnect(websocket, conversation_id)
+        
+    user_id = websocket.query_params.get("user_id")
+
+    if not user_id:
+        await websocket.close(code=4001, reason="User ID required")
+        return
+
+    await manager.connect(websocket, conversation_id)
+
+    try:
+        while True:
+            raw = await websocket.receive_text()
+            data = json.loads(raw)
+
+            content = data.get("content")
             if not content:
                 continue
 
@@ -114,6 +170,7 @@ async def chat_ws(websocket: WebSocket, conversation_id: str):
 # GET ALL CONVERSATIONS (RLS BYPASS)
 # ------------------------------------------------------------
 @router.get("/")
+@router.get("")
 def list_conversations(current=Depends(get_current_user)):
     user_id = get_uid(current)
     
