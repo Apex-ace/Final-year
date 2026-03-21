@@ -83,10 +83,14 @@ def submit_work(payload: WorkCreate, current=Depends(get_current_user)):
     }
 
     msg_res = supabase_admin.table("messages").insert({
-        "conversation_id": conversation_id,
-        "sender_id": user_id,
-        "content": message_content
-    }).execute()
+    "conversation_id": conversation_id,
+    "sender_id": user_id,
+    "content": {
+        "type": "work",
+        "link": payload.work_link,
+        "note": payload.note or "No note provided"
+    }
+}).execute()    
 
     if not msg_res.data:
         print("Warning: message inserted but no response returned")
