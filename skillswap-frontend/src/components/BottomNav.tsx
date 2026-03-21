@@ -1,37 +1,70 @@
-// src/components/BottomNav.tsx
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Home, Search, Briefcase, User } from "lucide-react";
 
 export default function BottomNav() {
   const { pathname } = useLocation();
-  const iconClass = (route: string) =>
-    pathname.startsWith(route) ? "text-teal-300" : "text-gray-400";
+
+  const isActive = (route: string) => pathname.startsWith(route);
+
+  const navItem = (to: string, Icon: any, label: string) => {
+    const active = isActive(to);
+
+    return (
+      <Link
+        to={to}
+        className="flex flex-col items-center justify-center relative"
+      >
+        {/* Active Glow */}
+        {active && (
+          <div className="absolute -top-1 w-10 h-10 bg-[#00e6c3]/20 blur-xl rounded-full" />
+        )}
+
+        {/* Icon */}
+        <div
+          className={`p-2 rounded-xl transition-all duration-200 ${
+            active
+              ? "bg-[#00e6c3]/10 text-[#00e6c3]"
+              : "text-gray-400"
+          }`}
+        >
+          <Icon className="w-5 h-5" />
+        </div>
+
+        {/* Label */}
+        <span
+          className={`text-[11px] mt-1 transition ${
+            active ? "text-[#00e6c3]" : "text-gray-500"
+          }`}
+        >
+          {label}
+        </span>
+      </Link>
+    );
+  };
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0b0f10] border-t border-[#10191c] safe-bottom z-50">
-      <div className="max-w-md mx-auto flex justify-around py-3">
-        <Link to="/dashboard" className="flex flex-col items-center gap-1">
-          <Home className={`w-6 h-6 ${iconClass("/dashboard")}`} />
-          <span className="text-xs text-gray-400">Home</span>
-        </Link>
+    <div className="md:hidden fixed bottom-4 left-0 right-0 z-50 flex justify-center px-4">
+      <div className="w-full max-w-md">
 
-        <Link to="/browse" className="flex flex-col items-center gap-1">
-          <Search className={`w-6 h-6 ${iconClass("/browse")}`} />
-          <span className="text-xs text-gray-400">Browse</span>
-        </Link>
+        {/* Floating Glass Container */}
+        <div className="
+          flex justify-between items-center
+          px-6 py-3
+          rounded-2xl
+          bg-[#0c1317]/80
+          backdrop-blur-xl
+          border border-[#1a2a2e]
+          shadow-lg shadow-black/40
+        ">
 
-        {/* Work replaces Chat in the nav */}
-        <Link to="/work" className="flex flex-col items-center gap-1">
-          <Briefcase className={`w-6 h-6 ${iconClass("/work")}`} />
-          <span className="text-xs text-gray-400">Work</span>
-        </Link>
+          {navItem("/dashboard", Home, "Home")}
+          {navItem("/browse", Search, "Browse")}
+          {navItem("/work", Briefcase, "Work")}
+          {navItem("/profile", User, "Profile")}
 
-        <Link to="/profile/edit" className="flex flex-col items-center gap-1">
-          <User className={`w-6 h-6 ${iconClass("/profile")}`} />
-          <span className="text-xs text-gray-400">Profile</span>
-        </Link>
+        </div>
       </div>
-    </nav>
+    </div>
   );
 }

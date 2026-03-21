@@ -3,7 +3,8 @@ import { useParams, Link } from "react-router-dom";
 import { api } from "../lib/api";
 import { supabase } from "../lib/supabase";
 import MobileShell from "../components/MobileShell";
-import FullPageLoader from "../components/FullPageLoader"; // Import
+import FullPageLoader from "../components/FullPageLoader";
+
 export default function PublicProfile() {
   const { id } = useParams();
   const [profile, setProfile] = useState<any | null>(null);
@@ -15,11 +16,10 @@ export default function PublicProfile() {
     const fetchProfile = async () => {
       if (!id) return;
       try {
-        setLoading(true);
         const res = await api.get(`/users/${id}`);
         setProfile(res.data.profile);
       } catch (error) {
-        console.error("Error fetching profile:", error);
+        console.error(error);
       } finally {
         setLoading(false);
       }
@@ -28,153 +28,159 @@ export default function PublicProfile() {
   }, [id]);
 
   const handleRequestSwap = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return setStatusMsg("Please log in first.");
+    const { data: { user } } = await supabase.auth.getUser();
 
+    if (!user) return setStatusMsg("Please log in first.");
     if (user.id === profile?.id)
       return setStatusMsg("You can't swap with yourself.");
 
     try {
       setRequestStatus("sending");
+
       await api.post("/swaps/request", {
         receiver_id: profile?.id,
         message: `Hi ${profile?.full_name}, I'd like to swap skills!`,
       });
+
       setRequestStatus("success");
       setStatusMsg("Request Sent ✓");
-    } catch (e) {
+    } catch {
       setRequestStatus("error");
       setStatusMsg("Failed to send request.");
     }
   };
 
   if (loading) return <FullPageLoader />;
-  if (!profile)
-    return (
-      <div className="text-center text-red-500 mt-20">User not found.</div>
-    );
+  if (!profile) return <div className="text-center mt-20">User not found</div>;
 
   return (
-    <MobileShell title="Profile" showBack={true}>
-      <div className="max-w-md mx-auto">
-        {/* HEADER CARD */}
-        <div className="bg-[#0c1317] rounded-2xl overflow-hidden border border-[#1a2a2e] shadow-xl">
-          {/* Cover */}
-          <div className="h-40 w-full bg-gradient-to-br from-[#003b36] to-[#001915]" />
+    <MobileShell title="Profile" showBack>
+      <div className="space-y-6">
 
-          {/* Profile Image + Basic Info */}
-          <div className="-mt-20 px-5 relative">
-            <div className="flex items-end gap-5">
-              <div className="h-32 w-32 rounded-2xl ring-4 ring-[#050505] bg-black overflow-hidden border border-[#1a2a2e] shadow-lg">
+        {/* 🔥 HERO */}
+        <div className="relative">
+
+          {/* Gradient background */}
+          <div className="h-40 rounded-2xl bg-gradient-to-br from-[#00e6c3]/30 to-[#001915]" />
+
+          {/* Profile */}
+          <div className="flex items-end gap-4 px-4 -mt-16">
+            <div className="relative">
+              <div className="absolute inset-0 bg-[#00e6c3]/20 blur-xl rounded-full" />
+
+              <div className="relative h-24 w-24 rounded-full overflow-hidden border border-[#1a2a2e] bg-[#0c1317]">
                 {profile.profile_image_url ? (
                   <img
                     src={profile.profile_image_url}
                     className="h-full w-full object-cover"
-                    alt="Profile"
                   />
                 ) : (
-                  <div className="flex items-center justify-center text-5xl text-gray-500 h-full">
+                  <div className="flex items-center justify-center h-full text-3xl text-gray-400">
                     {profile.full_name?.[0]}
                   </div>
                 )}
               </div>
+            </div>
 
-              <div className="pb-3">
-                <h1 className="text-2xl font-bold text-teal-300">
-                  {profile.full_name}
-                </h1>
-                <p className="text-sm text-gray-400">@{profile.username}</p>
-              </div>
+            <div className="pb-2">
+              <h2 className="text-lg font-semibold text-white">
+                {profile.full_name}
+              </h2>
+              <p className="text-xs text-gray-400">
+                @{profile.username}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* 🔥 LOCATION */}
+        <p className="text-sm text-gray-400 px-4">
+          📍 {profile.city || "Unknown"}, {profile.country}
+        </p>
+
+        {/* 🔥 ABOUT */}
+        <div className="px-4">
+          <h3 className="text-sm text-gray-400 mb-2">About</h3>
+          <p className="text-sm text-gray-300 leading-relaxed">
+            {profile.bio || "No bio available"}
+          </p>
+        </div>
+
+        {/* 🔥 SKILLS */}
+        <div className="px-4 space-y-4">
+
+          {/* Offered */}
+          <div className="p-4 rounded-2xl bg-[#0c1317]/80 border border-[#1a2a2e]">
+            <p className="text-sm text-gray-400 mb-2">Can Help With</p>
+            <div className="flex flex-wrap gap-2">
+              {profile.skills_offered?.map((skill: any) => (
+                <span
+                  key={skill}
+                  className="px-3 py-1 rounded-full bg-[#00e6c3]/10 border border-[#00e6c3]/20 text-teal-300 text-xs"
+                >
+                  {skill}
+                </span>
+              ))}
             </div>
           </div>
 
-          {/* Location */}
-          <div className="px-5 mt-4 text-gray-400 text-sm">
-            📍 {profile.city || "Unknown"}, {profile.country}
-          </div>
-
-          {/* About */}
-          <div className="px-5 mt-6 mb-6">
-            <h3 className="text-lg font-semibold text-teal-300 mb-2">
-              About
-            </h3>
-            <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-line">
-              {profile.bio || "This user has no bio."}
-            </p>
-          </div>
-
-          {/* Skills */}
-          <div className="px-5 space-y-5 pb-6">
-            <div className="p-4 rounded-xl bg-[#0b1113] border border-[#1a2a2e]">
-              <h3 className="text-md font-bold text-teal-300 mb-2">Can Give</h3>
-              <div className="flex flex-wrap gap-2">
-                {profile.skills_offered?.map((skill: any) => (
-                  <span
-                    key={skill}
-                    className="px-3 py-1 bg-[#111c20] border border-[#1f2f33] text-teal-300 text-xs rounded-full"
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-[#0b1113] border border-[#1a2a2e]">
-              <h3 className="text-md font-bold text-teal-300 mb-2">Needs</h3>
-              <div className="flex flex-wrap gap-2">
-                {profile.skills_wanted?.map((skill: any) => (
-                  <span
-                    key={skill}
-                    className="px-3 py-1 bg-[#111c20] border border-[#1f2f33] text-teal-300 text-xs rounded-full"
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
+          {/* Wanted */}
+          <div className="p-4 rounded-2xl bg-[#0c1317]/80 border border-[#1a2a2e]">
+            <p className="text-sm text-gray-400 mb-2">Wants to Learn</p>
+            <div className="flex flex-wrap gap-2">
+              {profile.skills_wanted?.map((skill: any) => (
+                <span
+                  key={skill}
+                  className="px-3 py-1 rounded-full bg-[#00e6c3]/10 border border-[#00e6c3]/20 text-teal-300 text-xs"
+                >
+                  {skill}
+                </span>
+              ))}
             </div>
           </div>
 
-          {/* Actions: Request Swap + Open Workspace */}
-          <div className="px-5 pb-6 space-y-3">
-            {requestStatus === "success" ? (
-              <button
-                disabled
-                className="w-full py-3 bg-[#003b36] text-teal-300 rounded-xl"
-              >
-                Request Sent ✓
-              </button>
-            ) : (
-              <button
-                onClick={handleRequestSwap}
-                disabled={requestStatus === "sending"}
-                className="w-full py-3 rounded-xl bg-gradient-to-br from-[#00e6c3] to-[#009f82] text-black font-semibold"
-              >
-                {requestStatus === "sending" ? "Sending..." : "Request Swap"}
-              </button>
-            )}
+        </div>
 
-            {/* NEW: Open Workspace (per-profile) */}
-            <Link
-              to={`/work?u=${profile.id}`}
-              className="block w-full text-center py-3 rounded-xl bg-[#0c1317] border border-[#1a2a2e] text-teal-300 text-sm"
+        {/* 🔥 ACTIONS */}
+        <div className="px-4 space-y-3">
+
+          {requestStatus === "success" ? (
+            <button className="w-full py-3 rounded-2xl bg-[#003b36] text-teal-300">
+              Request Sent ✓
+            </button>
+          ) : (
+            <button
+              onClick={handleRequestSwap}
+              className="
+                w-full py-3 rounded-2xl
+                bg-[#00e6c3]
+                text-black font-medium
+                shadow-lg shadow-[#00e6c3]/20
+              "
             >
-              Open Workspace
-            </Link>
+              {requestStatus === "sending" ? "Sending..." : "Request Swap"}
+            </button>
+          )}
 
-            {statusMsg && (
-              <p className="text-xs text-gray-400 pt-1">{statusMsg}</p>
-            )}
-          </div>
-        </div>
-
-        {/* Back to browse */}
-        <div className="text-center pt-5">
-          <Link to="/browse" className="text-teal-300 text-sm">
-            ← Back to Browse
+          <Link
+            to={`/work?u=${profile.id}`}
+            className="
+              block w-full text-center py-3 rounded-2xl
+              bg-[#0c1317]
+              border border-[#1a2a2e]
+              text-white
+            "
+          >
+            Open Workspace
           </Link>
+
+          {statusMsg && (
+            <p className="text-xs text-gray-400 text-center">
+              {statusMsg}
+            </p>
+          )}
         </div>
+
       </div>
     </MobileShell>
   );

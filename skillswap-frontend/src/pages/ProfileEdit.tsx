@@ -114,321 +114,215 @@ export default function ProfileEdit() {
   const card = "rounded-2xl bg-[#0b0f10]/80 border border-[#10191c] p-5";
 
   return (
-    <MobileShell title="Edit Profile" actionArea={actionArea}>
-      
-      {/* HEADER / HAMBURGER */}
-      <div className="relative flex justify-end items-center mb-4 z-30">
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="p-2 rounded-lg bg-[#0c1317] border border-[#1a2a2e] text-gray-400 hover:text-teal-300 transition-colors"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
+  <MobileShell title="Edit Profile" actionArea={actionArea}>
 
-        {/* DROPDOWN MENU */}
-        <AnimatePresence>
-          {menuOpen && (
-            <>
-              <div 
-                className="fixed inset-0 z-30" 
-                onClick={() => setMenuOpen(false)} 
-              />
-              
-              <motion.div
-                initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                transition={{ duration: 0.15 }}
-                className="absolute top-12 right-0 w-48 bg-[#0b0f10] border border-[#1a2a2e] rounded-xl shadow-2xl z-40 overflow-hidden p-1.5"
-              >
-                <button
-                  onClick={() => {
-                    setMenuOpen(false);
-                    setShowLogoutConfirm(true);
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-red-500/10 text-gray-300 hover:text-red-400 transition-colors text-sm font-medium"
-                >
-                  <LogOut className="w-4 h-4" />
-                  Log Out
-                </button>
-              </motion.div>
-            </>
+    {/* 🔥 HEADER ACTION */}
+    <div className="flex justify-end mb-4">
+      <button
+        onClick={() => setMenuOpen(!menuOpen)}
+        className="p-2 rounded-xl bg-[#0c1317] border border-[#1a2a2e]"
+      >
+        <Menu className="w-5 h-5 text-gray-400" />
+      </button>
+    </div>
+
+    {/* 🔥 TOAST */}
+    {toast && (
+      <div className="
+        mb-4 text-center py-2 rounded-xl
+        bg-[#0c1317] border border-[#1a2a2e]
+        text-teal-300 text-sm
+      ">
+        {toast}
+      </div>
+    )}
+
+    {/* 🔥 PROFILE IMAGE */}
+    <div className="
+      p-5 rounded-2xl
+      bg-[#0c1317]/80
+      backdrop-blur-xl
+      border border-[#1a2a2e]
+    ">
+      <p className="text-sm text-gray-400 mb-3">Profile Image</p>
+
+      <div className="flex items-center gap-4">
+        <div className="relative">
+          <img
+            src={
+              profile.profile_image_url ||
+              "https://api.dicebear.com/7.x/initials/svg?seed=User"
+            }
+            className="h-20 w-20 rounded-full object-cover border border-[#1a2a2e]"
+          />
+
+          {uploading && (
+            <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center text-xs">
+              Uploading...
+            </div>
           )}
-        </AnimatePresence>
+        </div>
+
+        <label className="
+          px-4 py-2 rounded-xl
+          bg-[#0c1317]
+          border border-[#1a2a2e]
+          text-sm text-gray-300 cursor-pointer
+        ">
+          Change
+          <input type="file" hidden onChange={handleImage} />
+        </label>
+      </div>
+    </div>
+
+    {/* 🔥 BASIC INFO */}
+    <div className="mt-5 space-y-4">
+
+      <div className="space-y-2">
+        <label className="text-xs text-gray-400">Full Name</label>
+        <input
+          value={profile.full_name}
+          onChange={(e) =>
+            setProfile({ ...profile, full_name: e.target.value })
+          }
+          className="
+            w-full px-4 py-3 rounded-xl
+            bg-[#0c1317]
+            border border-[#1a2a2e]
+            text-white
+          "
+        />
       </div>
 
-      {toast && (
-        <div className="mb-3 text-center text-teal-300 bg-[#0c1317] border border-[#1a2a2e] py-2 rounded-xl">
-          {toast}
-        </div>
-      )}
-
-      {/* PROFILE IMAGE */}
-      <div className={card}>
-        <p className="text-sm text-gray-400 mb-2">Profile Image</p>
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <img
-              src={
-                profile.profile_image_url ||
-                "https://api.dicebear.com/7.x/initials/svg?seed=User"
-              }
-              className="h-20 w-20 rounded-full object-cover border border-[#1a2a2e]"
-            />
-            {uploading && (
-              <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center text-xs">
-                Uploading...
-              </div>
-            )}
-          </div>
-          <label className="bg-[#0c1317] border border-[#1a2a2e] px-4 py-2 rounded-xl text-sm cursor-pointer text-gray-300">
-            Choose File
-            <input
-              type="file"
-              className="hidden"
-              accept="image/*"
-              onChange={handleImage}
-            />
-          </label>
-        </div>
+      <div className="space-y-2">
+        <label className="text-xs text-gray-400">Username</label>
+        <input
+          value={profile.username}
+          onChange={(e) =>
+            setProfile({ ...profile, username: e.target.value })
+          }
+          className="
+            w-full px-4 py-3 rounded-xl
+            bg-[#0c1317]
+            border border-[#1a2a2e]
+            text-white
+          "
+        />
       </div>
 
-      {/* BASIC INFO */}
-      <div className={`${card} mt-5 space-y-4`}>
-        <div>
-          <p className="text-sm text-gray-400 mb-1">Full Name</p>
-          <input
-            className="w-full bg-[#0c1317] border border-[#1a2a2e] rounded-xl px-4 py-3"
-            value={profile.full_name}
-            onChange={(e) =>
-              setProfile({ ...profile, full_name: e.target.value })
-            }
-          />
-        </div>
-
-        <div>
-          <p className="text-sm text-gray-400 mb-1">Username</p>
-          <input
-            className="w-full bg-[#0c1317] border border-[#1a2a2e] rounded-xl px-4 py-3"
-            value={profile.username}
-            onChange={(e) =>
-              setProfile({ ...profile, username: e.target.value })
-            }
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm text-gray-400 mb-1">City</p>
-            <input
-              className="w-full bg-[#0c1317] border border-[#1a2a2e] rounded-xl px-4 py-3"
-              value={profile.city}
-              onChange={(e) =>
-                setProfile({ ...profile, city: e.target.value })
-              }
-            />
-          </div>
-
-          <div>
-            <p className="text-sm text-gray-400 mb-1">Country</p>
-            <input
-              className="w-full bg-[#0c1317] border border-[#1a2a2e] rounded-xl px-4 py-3"
-              value={profile.country}
-              onChange={(e) =>
-                setProfile({ ...profile, country: e.target.value })
-              }
-            />
-          </div>
-        </div>
-
-        <div>
-          <p className="text-sm text-gray-400 mb-1">Bio</p>
-          <textarea
-            className="w-full bg-[#0c1317] border border-[#1a2a2e] rounded-xl px-4 py-3"
-            rows={4}
-            value={profile.bio}
-            onChange={(e) =>
-              setProfile({ ...profile, bio: e.target.value })
-            }
-          />
-        </div>
+      <div className="grid grid-cols-2 gap-3">
+        <input
+          placeholder="City"
+          value={profile.city}
+          onChange={(e) =>
+            setProfile({ ...profile, city: e.target.value })
+          }
+          className="px-4 py-3 rounded-xl bg-[#0c1317] border border-[#1a2a2e]"
+        />
+        <input
+          placeholder="Country"
+          value={profile.country}
+          onChange={(e) =>
+            setProfile({ ...profile, country: e.target.value })
+          }
+          className="px-4 py-3 rounded-xl bg-[#0c1317] border border-[#1a2a2e]"
+        />
       </div>
 
-      {/* SKILLS */}
-      <div className="mt-5 space-y-5">
-        {/* Offered */}
-        <div className={card}>
-          <div className="flex justify-between items-center">
-            <p className="text-sm text-gray-400">Skills Offered</p>
-            <button
-              onClick={() => setSkillModalOpen("offered")}
-              className="text-teal-300 text-sm"
-            >
-              + Add
-            </button>
-          </div>
+      <textarea
+        rows={4}
+        placeholder="Your bio..."
+        value={profile.bio}
+        onChange={(e) =>
+          setProfile({ ...profile, bio: e.target.value })
+        }
+        className="
+          w-full px-4 py-3 rounded-xl
+          bg-[#0c1317]
+          border border-[#1a2a2e]
+        "
+      />
+    </div>
 
-          <div className="flex flex-wrap mt-3 gap-2">
-            {profile.skills_offered?.map((skill: string) => (
-              <span
-                key={skill}
-                className="px-3 py-1 rounded-full bg-[#0f1b1d] border border-[#1a2a2e] text-teal-300 text-xs flex items-center gap-2"
-              >
-                {skill}
-                <X
-                  className="w-3 h-3 cursor-pointer"
-                  onClick={() => toggleSkill(skill, "skills_offered")}
-                />
-              </span>
-            ))}
-          </div>
-        </div>
+    {/* 🔥 SKILLS */}
+    <div className="mt-6 space-y-4">
 
-        {/* Wanted */}
-        <div className={card}>
-          <div className="flex justify-between items-center">
-            <p className="text-sm text-gray-400">Skills Wanted</p>
-            <button
-              onClick={() => setSkillModalOpen("wanted")}
-              className="text-teal-300 text-sm"
-            >
-              + Add
-            </button>
-          </div>
-
-          <div className="flex flex-wrap mt-3 gap-2">
-            {profile.skills_wanted?.map((skill: string) => (
-              <span
-                key={skill}
-                className="px-3 py-1 rounded-full bg-[#0f1b1d] border border-[#1a2a2e] text-teal-300 text-xs flex items-center gap-2"
-              >
-                {skill}
-                <X
-                  className="w-3 h-3 cursor-pointer"
-                  onClick={() => toggleSkill(skill, "skills_wanted")}
-                />
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* SKILL MODAL (UPDATED to 90% height) */}
-      <AnimatePresence>
-        {skillModalOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 z-50 flex justify-center items-end"
+      {/* Offered */}
+      <div className="
+        p-4 rounded-2xl
+        bg-[#0c1317]/80
+        border border-[#1a2a2e]
+      ">
+        <div className="flex justify-between mb-3">
+          <p className="text-sm text-gray-400">Skills Offered</p>
+          <button
+            onClick={() => setSkillModalOpen("offered")}
+            className="text-teal-300 text-sm"
           >
-            <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              // UPDATED: Added h-[90vh] and flex-col
-              className="w-full h-[90vh] bg-[#0b0f10] rounded-t-2xl p-5 border-t border-[#1a2a2e] flex flex-col"
+            + Add
+          </button>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {profile.skills_offered?.map((skill: string) => (
+            <span
+              key={skill}
+              className="
+                px-3 py-1 rounded-full
+                bg-[#00e6c3]/10
+                border border-[#00e6c3]/20
+                text-teal-300 text-xs flex items-center gap-2
+              "
             >
-              <div className="flex justify-between items-center mb-4 shrink-0">
-                <p className="text-teal-300 font-semibold">Select Skills</p>
-                <X
-                  className="text-gray-300 cursor-pointer"
-                  onClick={() => setSkillModalOpen(null)}
-                />
-              </div>
+              {skill}
+              <X
+                className="w-3 h-3 cursor-pointer"
+                onClick={() => toggleSkill(skill, "skills_offered")}
+              />
+            </span>
+          ))}
+        </div>
+      </div>
 
-              {/* Search */}
-              <div className="relative mb-4 shrink-0">
-                <Search className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
-                <input
-                  placeholder="Search skills..."
-                  value={skillSearch}
-                  onChange={(e) => setSkillSearch(e.target.value)}
-                  className="w-full bg-[#0c1317] border border-[#1a2a2e] rounded-xl px-8 py-2 text-gray-200"
-                />
-              </div>
-
-              {/* Skill list - UPDATED: Changed max-h to flex-1 for full expansion */}
-              <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-                {skills
-                  .filter((s) =>
-                    s.name.toLowerCase().includes(skillSearch.toLowerCase())
-                  )
-                  .map((s) => {
-                    const selected = profile[
-                      skillModalOpen === "offered"
-                        ? "skills_offered"
-                        : "skills_wanted"
-                    ]?.includes(s.name);
-
-                    return (
-                      <div
-                        key={s.id}
-                        onClick={() =>
-                          toggleSkill(
-                            s.name,
-                            skillModalOpen === "offered"
-                              ? "skills_offered"
-                              : "skills_wanted"
-                          )
-                        }
-                        className="flex items-center justify-between bg-[#0c1317] border border-[#1a2a2e] px-4 py-3 rounded-xl cursor-pointer"
-                      >
-                        <span className="text-gray-200">{s.name}</span>
-                        {selected && <Check className="text-teal-300" />}
-                      </div>
-                    );
-                  })}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* LOGOUT CONFIRMATION MODAL */}
-      <AnimatePresence>
-        {showLogoutConfirm && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 z-50 flex justify-center items-center p-5"
+      {/* Wanted */}
+      <div className="
+        p-4 rounded-2xl
+        bg-[#0c1317]/80
+        border border-[#1a2a2e]
+      ">
+        <div className="flex justify-between mb-3">
+          <p className="text-sm text-gray-400">Skills Wanted</p>
+          <button
+            onClick={() => setSkillModalOpen("wanted")}
+            className="text-teal-300 text-sm"
           >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="w-full max-w-sm bg-[#0b0f10] border border-[#1a2a2e] rounded-2xl p-6 text-center shadow-2xl"
+            + Add
+          </button>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {profile.skills_wanted?.map((skill: string) => (
+            <span
+              key={skill}
+              className="
+                px-3 py-1 rounded-full
+                bg-[#00e6c3]/10
+                border border-[#00e6c3]/20
+                text-teal-300 text-xs flex items-center gap-2
+              "
             >
-              <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <AlertTriangle className="text-red-400 w-6 h-6" />
-              </div>
-              
-              <h3 className="text-lg font-semibold text-white mb-2">Log Out?</h3>
-              <p className="text-gray-400 text-sm mb-6">
-                Are you sure you want to sign out? Any unsaved changes will be lost.
-              </p>
+              {skill}
+              <X
+                className="w-3 h-3 cursor-pointer"
+                onClick={() => toggleSkill(skill, "skills_wanted")}
+              />
+            </span>
+          ))}
+        </div>
+      </div>
 
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowLogoutConfirm(false)}
-                  className="flex-1 py-3 rounded-xl bg-[#0c1317] border border-[#1a2a2e] text-gray-300 font-medium"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="flex-1 py-3 rounded-xl bg-red-500 text-white font-medium shadow-lg shadow-red-900/20"
-                >
-                  Log Out
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+    </div>
 
-    </MobileShell>
-  );
+  </MobileShell>
+);
 }

@@ -1,4 +1,3 @@
-// src/pages/Login.tsx
 import React, { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { motion } from "framer-motion";
@@ -9,21 +8,19 @@ export default function Login() {
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
-
-  const [agree, setAgree] = useState(false); // NEW: Terms checkbox
-
+  const [agree, setAgree] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Check user session on load
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        window.location.href = "/dashboard";
-      } else {
-        setLoading(false);
-      }
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (session) window.location.href = "/dashboard";
+      else setLoading(false);
     };
+
     checkSession();
   }, []);
 
@@ -32,7 +29,7 @@ export default function Login() {
     setError("");
 
     if (!agree) {
-      setError("You must accept the Terms & Conditions to continue.");
+      setError("You must accept Terms & Conditions");
       return;
     }
 
@@ -43,7 +40,9 @@ export default function Login() {
         email,
         options: { shouldCreateUser: true },
       });
+
       if (error) throw error;
+
       setOtpSent(true);
     } catch (err: any) {
       setError(err.message);
@@ -57,7 +56,7 @@ export default function Login() {
     setError("");
 
     if (!agree) {
-      setError("You must accept the Terms & Conditions to continue.");
+      setError("You must accept Terms & Conditions");
       return;
     }
 
@@ -69,6 +68,7 @@ export default function Login() {
         token: otp,
         type: "email",
       });
+
       if (error) throw error;
 
       window.location.href = "/dashboard";
@@ -78,104 +78,147 @@ export default function Login() {
     }
   };
 
-  // Loader display
   if (loading) return <FullPageLoader />;
 
-  const card =
-    "w-full max-w-sm bg-[#0b0f10]/80 backdrop-blur-xl border border-[#10191c] rounded-2xl p-6 shadow-xl";
-  const inputBox =
-    "w-full px-4 py-3 bg-[#0c1317] border border-[#1a2a2e] rounded-xl text-gray-200 placeholder-gray-500 focus:outline-none";
-  const tealBtn =
-    "w-full py-3 rounded-xl bg-gradient-to-br from-[#00e6c3] to-[#009f82] text-black font-semibold disabled:opacity-40 disabled:cursor-not-allowed";
-
   return (
-    <div className="min-h-screen bg-[#050505] text-gray-200 flex items-center justify-center px-5">
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={card}>
-        <h1 className="text-xl font-bold text-teal-300 mb-4 text-center">
-          Login with Email OTP
-        </h1>
+    <div className="min-h-screen bg-[#050505] flex items-center justify-center px-5">
 
-        {error && <p className="text-red-400 text-sm mb-3 text-center">{error}</p>}
+      {/* 🔥 MAIN CONTAINER */}
+      <div className="w-full max-w-sm space-y-6">
 
-        {/* BEFORE OTP SENT */}
-        {!otpSent ? (
-          <form onSubmit={sendOTP} className="space-y-4">
-            <input
-              type="email"
-              placeholder="Enter your email"
-              className={inputBox}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+        {/* 🔥 APP TITLE */}
+        <div className="text-center">
+          <h1 className="text-2xl font-semibold text-white">
+            SkillSwap
+          </h1>
+          <p className="text-sm text-gray-400 mt-1">
+            Learn. Share. Grow.
+          </p>
+        </div>
 
-            {/* Terms & Conditions Box */}
-            <div className="bg-[#0b0f10] border border-[#1a2a2e] p-4 rounded-xl text-sm leading-relaxed">
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="mt-1 w-5 h-5 accent-teal-400"
-                  checked={agree}
-                  onChange={(e) => setAgree(e.target.checked)}
-                />
+        {/* 🔥 GLASS CARD */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="
+            p-6 rounded-2xl
+            bg-[#0c1317]/80
+            backdrop-blur-xl
+            border border-[#1a2a2e]
+            shadow-xl shadow-black/40
+          "
+        >
 
-                <span className="text-gray-300">
-                  By continuing, I confirm that:
-                  <br />
-                  • My profile & skills will be visible to others.
-                  <br />
-                  • Users may contact me and chat with me.
-                  <br />
-                  • I agree to the{" "}
-                  <span className="text-teal-300 underline">Terms & Conditions</span> and{" "}
-                  <span className="text-teal-300 underline">Privacy Policy</span>.
-                </span>
-              </label>
-            </div>
-
-            <button type="submit" disabled={!agree} className={tealBtn}>
-              Send OTP
-            </button>
-          </form>
-        ) : (
-          /* AFTER OTP SENT */
-          <form onSubmit={verifyOTP} className="space-y-4 mt-2">
-            <p className="text-sm text-gray-400 text-center">
-              OTP sent to <span className="text-teal-300">{email}</span>
+          {error && (
+            <p className="text-red-400 text-sm mb-3 text-center">
+              {error}
             </p>
+          )}
 
-            <input
-              type="text"
-              maxLength={6}
-              placeholder="Enter 6-digit OTP"
-              className={inputBox}
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              required
-            />
+          {!otpSent ? (
+            <form onSubmit={sendOTP} className="space-y-4">
 
-            {/* Terms Still Required */}
-            <div className="bg-[#0b0f10] border border-[#1a2a2e] p-4 rounded-xl text-sm leading-relaxed">
-              <label className="flex items-start gap-3 cursor-pointer">
+              {/* Email */}
+              <input
+                type="email"
+                placeholder="Enter your email"
+                className="
+                  w-full px-4 py-3
+                  rounded-xl
+                  bg-[#0c1317]
+                  border border-[#1a2a2e]
+                  text-white
+                  outline-none
+                  focus:border-[#00e6c3]
+                "
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+
+              {/* Terms */}
+              <label className="flex items-start gap-3 text-sm text-gray-300 cursor-pointer">
                 <input
                   type="checkbox"
-                  className="mt-1 w-5 h-5 accent-teal-400"
+                  className="mt-1 accent-[#00e6c3]"
                   checked={agree}
                   onChange={(e) => setAgree(e.target.checked)}
                 />
-
-                <span className="text-gray-300">
-                  I agree to the Terms & Conditions and understand my profile will be visible to others.
+                <span>
+                  I agree to Terms & Privacy Policy and allow my profile to be visible.
                 </span>
               </label>
-            </div>
 
-            <button type="submit" disabled={!agree} className={tealBtn}>
-              Verify OTP
-            </button>
-          </form>
-        )}
-      </motion.div>
+              {/* Button */}
+              <button
+                type="submit"
+                disabled={!agree}
+                className="
+                  w-full py-3 rounded-xl
+                  bg-[#00e6c3]
+                  text-black font-medium
+                  disabled:opacity-40
+                "
+              >
+                Send OTP
+              </button>
+
+            </form>
+          ) : (
+            <form onSubmit={verifyOTP} className="space-y-4">
+
+              <p className="text-sm text-gray-400 text-center">
+                OTP sent to <span className="text-[#00e6c3]">{email}</span>
+              </p>
+
+              {/* OTP */}
+              <input
+                type="text"
+                maxLength={6}
+                placeholder="Enter OTP"
+                className="
+                  w-full px-4 py-3
+                  rounded-xl
+                  bg-[#0c1317]
+                  border border-[#1a2a2e]
+                  text-white text-center tracking-widest
+                  outline-none
+                "
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                required
+              />
+
+              {/* Terms */}
+              <label className="flex items-start gap-3 text-sm text-gray-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="mt-1 accent-[#00e6c3]"
+                  checked={agree}
+                  onChange={(e) => setAgree(e.target.checked)}
+                />
+                <span>I agree to Terms & Conditions</span>
+              </label>
+
+              {/* Button */}
+              <button
+                type="submit"
+                disabled={!agree}
+                className="
+                  w-full py-3 rounded-xl
+                  bg-[#00e6c3]
+                  text-black font-medium
+                  disabled:opacity-40
+                "
+              >
+                Verify OTP
+              </button>
+
+            </form>
+          )}
+        </motion.div>
+
+      </div>
     </div>
   );
 }

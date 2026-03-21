@@ -1,60 +1,94 @@
-// src/components/MobileShell.tsx
 import React from "react";
 import { motion } from "framer-motion";
+import { ChevronLeft } from "lucide-react";
 
 interface Props {
   title?: string;
   showBack?: boolean;
   children: React.ReactNode;
-  actionArea?: React.ReactNode; // Save/Send button
+  actionArea?: React.ReactNode;
 }
 
-export default function MobileShell({ title, showBack = true, children, actionArea }: Props) {
+export default function MobileShell({
+  title,
+  showBack = true,
+  children,
+  actionArea,
+}: Props) {
   return (
-    <div className="min-h-screen bg-[#050505] text-gray-200 relative">
-      
-      {/* Safe top area for notches */}
-      <div className="safe-top bg-transparent" />
+    <div className="min-h-screen bg-[#050505] text-gray-200 relative overflow-hidden">
 
-      {/* HEADER */}
-      <header className="w-full sticky top-0 z-40 bg-[#050505] border-b border-[#0b1113]">
-        <div className="max-w-md mx-auto px-4 py-3 flex items-center gap-3">
-          {showBack ? (
-            <button
-              onClick={() => history.back()}
-              className="p-2 rounded-md hover:bg-[#062427]/20"
-            >
-              ←
-            </button>
-          ) : (
-            <div className="w-8" />
-          )}
+      {/* Safe top */}
+      <div className="safe-top" />
 
-          <h1 className="text-lg font-semibold truncate">{title}</h1>
-          <div className="flex-1" />
+      {/* 🔥 FLOATING GLASS HEADER */}
+      <header className="fixed top-0 left-0 right-0 z-40 flex justify-center px-4 pt-2">
+        <div className="w-full max-w-md">
+
+          <div className="
+            flex items-center gap-3
+            px-4 py-3
+            rounded-2xl
+            bg-[#0c1317]/80
+            backdrop-blur-xl
+            border border-[#1a2a2e]
+            shadow-lg shadow-black/40
+          ">
+
+            {/* Back button */}
+            {showBack ? (
+              <button
+                onClick={() => history.back()}
+                className="p-2 rounded-xl bg-[#111b1d] hover:bg-[#162326] transition"
+              >
+                <ChevronLeft className="w-5 h-5 text-teal-300" />
+              </button>
+            ) : (
+              <div className="w-10" />
+            )}
+
+            {/* Title */}
+            <h1 className="text-[15px] font-semibold truncate text-white tracking-wide">
+              {title}
+            </h1>
+
+            <div className="flex-1" />
+
+          </div>
         </div>
       </header>
 
-      {/* MAIN CONTENT */}
+      {/* 🔥 MAIN CONTENT */}
       <motion.main
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.18 }}
-        className="max-w-md mx-auto px-4 py-4 pb-[160px]"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25 }}
+        className="max-w-md mx-auto px-4 pt-[90px] pb-[140px]"
       >
         {children}
       </motion.main>
 
-      {/* FIXED ACTION BUTTON ABOVE NAV */}
+      {/* 🔥 FLOATING ACTION AREA */}
       {actionArea && (
-        <div className="fixed left-0 right-0 bottom-[100px] z-50 px-4 pointer-events-auto">
-          <div className="max-w-md mx-auto">
-            {actionArea}
+        <div className="fixed left-0 right-0 bottom-[100px] z-50 px-4 flex justify-center">
+          <div className="w-full max-w-md">
+
+            <div className="
+              bg-[#0c1317]/90
+              backdrop-blur-xl
+              border border-[#1a2a2e]
+              rounded-2xl
+              p-2
+              shadow-xl shadow-black/40
+            ">
+              {actionArea}
+            </div>
+
           </div>
         </div>
       )}
 
-      {/* Safe bottom padding */}
+      {/* Safe bottom */}
       <div className="safe-bottom" />
     </div>
   );

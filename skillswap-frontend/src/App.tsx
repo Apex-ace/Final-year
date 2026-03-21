@@ -7,6 +7,7 @@ import BottomNav from "./components/BottomNav";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import ProfileEdit from "./pages/ProfileEdit";
+import MyProfile from "./pages/MyProfile"; // ✅ NEW
 import Browse from "./pages/Browse";
 import PublicProfile from "./pages/PublicProfile";
 import Chat from "./pages/Chat";
@@ -21,14 +22,17 @@ export default function App() {
   useBackGesture(true);
   const location = useLocation();
 
-  // No bottom nav on login & video call screens
+  // Hide bottom nav on specific screens
   const hideBottomNav = ["/", "/video-call"].includes(location.pathname);
 
   return (
     <>
       <Routes>
+
+        {/* 🔓 PUBLIC ROUTES */}
         <Route path="/" element={<Login />} />
 
+        {/* 🔐 PROTECTED ROUTES */}
         <Route
           path="/home"
           element={
@@ -57,15 +61,6 @@ export default function App() {
         />
 
         <Route
-          path="/profile/edit"
-          element={
-            <ProtectedRoute>
-              <ProfileEdit />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
           path="/browse"
           element={
             <ProtectedRoute>
@@ -74,10 +69,30 @@ export default function App() {
           }
         />
 
-        {/* Public profile (can be opened even if not logged in) */}
+        {/* 🔥 MY PROFILE (NEW FIX) */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <MyProfile />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ✏️ EDIT PROFILE */}
+        <Route
+          path="/profile/edit"
+          element={
+            <ProtectedRoute>
+              <ProfileEdit />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 🌍 PUBLIC PROFILE */}
         <Route path="/profile/:id" element={<PublicProfile />} />
 
-        {/* Chat still works, just not in bottom nav */}
+        {/* 💬 CHAT */}
         <Route
           path="/chat"
           element={
@@ -87,6 +102,7 @@ export default function App() {
           }
         />
 
+        {/* 📞 VIDEO CALL */}
         <Route
           path="/video-call"
           element={
@@ -96,9 +112,12 @@ export default function App() {
           }
         />
 
+        {/* ❌ 404 */}
         <Route path="*" element={<NotFound />} />
+
       </Routes>
 
+      {/* 🔥 BOTTOM NAV */}
       {!hideBottomNav && <BottomNav />}
     </>
   );
