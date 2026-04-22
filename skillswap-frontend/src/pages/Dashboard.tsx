@@ -9,6 +9,7 @@ export default function Dashboard() {
   const [profile, setProfile] = useState<any>(null);
   const [requests, setRequests] = useState<any[]>([]);
   const [conversations, setConversations] = useState<any[]>([]);
+  const [recommendations, setRecommendations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
@@ -42,6 +43,9 @@ export default function Dashboard() {
 
       const convRes = await api.get("/chats/");
       setConversations(convRes.data.conversations || []);
+
+      const recRes = await api.get("/recommendations/me?top_n=6");
+      setRecommendations(recRes.data.recommendations || []);
     } catch (err) {
       console.error("Error loading dashboard:", err);
     } finally {
@@ -71,19 +75,18 @@ export default function Dashboard() {
     }
   };
 
-  // 🔥 LOADER
   if (loading) return <FullPageLoader />;
 
   return (
     <MobileShell title="Home" showBack={false}>
       <div className="space-y-6">
-
-        {/* 🔥 HERO CARD */}
-        <div className="
-          p-5 rounded-2xl
-          bg-gradient-to-br from-[#00e6c3]/20 to-transparent
-          border border-[#1a2a2e]
-        ">
+        <div
+          className="
+            p-5 rounded-2xl
+            bg-gradient-to-br from-[#00e6c3]/20 to-transparent
+            border border-[#1a2a2e]
+          "
+        >
           <h2 className="text-xl font-semibold text-white">
             Hey {profile?.full_name?.split(" ")[0] || "there"} 👋
           </h2>
@@ -100,7 +103,70 @@ export default function Dashboard() {
           </Link>
         </div>
 
-        {/* 🔥 CONVERSATIONS */}
+        {/* RECOMMENDATIONS */}
+        <div className="space-y-3">
+          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            Recommended Matches
+          </h3>
+
+          {recommendations.length === 0 ? (
+            <div className="text-gray-500 text-sm">
+              Add both offered and wanted skills to get better recommendations
+            </div>
+          ) : (
+            recommendations.map((user) => (
+              <Link
+                key={user.id}
+                to={`/profile/${user.id}`}
+                className="
+                  flex items-start gap-4
+                  p-4 rounded-2xl
+                  bg-[#0c1317]/80
+                  border border-[#1a2a2e]
+                  hover:border-[#00e6c3]/30
+                  transition
+                "
+              >
+                <img
+                  src={
+                    user.profile_image_url ||
+                    "https://api.dicebear.com/7.x/initials/svg?seed=U"
+                  }
+                  className="w-12 h-12 rounded-full object-cover"
+                />
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-white font-medium truncate">
+                      {user.full_name}
+                    </p>
+                    <span className="text-xs text-[#00e6c3] font-semibold">
+                      {(user.match_score * 100).toFixed(0)}%
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-gray-400 mt-1">
+                    {user.city || "Remote"} • ⭐ {user.average_rating || 0} • {user.reviews_count || 0} reviews
+                  </p>
+
+                  {user.skills_they_offer_you_need?.length > 0 && (
+                    <p className="text-xs text-teal-300 mt-2">
+                      Can teach you: {user.skills_they_offer_you_need.join(", ")}
+                    </p>
+                  )}
+
+                  {user.skills_they_want_from_you?.length > 0 && (
+                    <p className="text-xs text-gray-300 mt-1">
+                      Wants from you: {user.skills_they_want_from_you.join(", ")}
+                    </p>
+                  )}
+                </div>
+              </Link>
+            ))
+          )}
+        </div>
+
+        {/* CHATS */}
         <div className="space-y-3">
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
             Chats
@@ -147,7 +213,7 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* 🔥 REQUESTS */}
+        {/* REQUESTS */}
         <div className="space-y-3">
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
             Requests
@@ -213,7 +279,6 @@ export default function Dashboard() {
             ))
           )}
         </div>
-
       </div>
     </MobileShell>
   );

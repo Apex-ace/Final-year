@@ -3,7 +3,11 @@ import { supabase } from "../lib/supabase";
 import { Link } from "react-router-dom";
 import MobileShell from "../components/MobileShell";
 
-interface Skill { id: string; name: string; }
+interface Skill {
+  id: string;
+  name: string;
+}
+
 interface Profile {
   id: string;
   full_name: string;
@@ -12,6 +16,8 @@ interface Profile {
   city: string;
   profile_image_url: string | null;
   skills_offered: string[];
+  average_rating?: number;
+  reviews_count?: number;
 }
 
 export default function Browse() {
@@ -32,6 +38,7 @@ export default function Browse() {
 
   const searchSkills = async () => {
     setLoadingSkills(true);
+
     const { data } = await supabase
       .from("skills")
       .select("*")
@@ -51,7 +58,7 @@ export default function Browse() {
       .select("*")
       .contains("skills_offered", [skillName]);
 
-    setProfiles(data || []);
+    setProfiles((data as Profile[]) || []);
     setLoadingProfiles(false);
   };
 
@@ -63,11 +70,8 @@ export default function Browse() {
 
   return (
     <MobileShell title="Explore" showBack={!!selectedSkill}>
-
-      {/* 🔥 HERO + SEARCH */}
       {!selectedSkill && (
         <div className="space-y-6">
-
           <div>
             <h2 className="text-2xl font-bold text-white mb-2">
               Discover Skills
@@ -77,7 +81,6 @@ export default function Browse() {
             </p>
           </div>
 
-          {/* Search */}
           <div className="relative">
             <input
               placeholder="Search skills..."
@@ -97,7 +100,6 @@ export default function Browse() {
             />
           </div>
 
-          {/* Skills */}
           {loadingSkills ? (
             <div className="text-gray-400 text-sm">Loading skills...</div>
           ) : (
@@ -125,25 +127,20 @@ export default function Browse() {
         </div>
       )}
 
-      {/* 🔥 PROFILES LIST */}
       {selectedSkill && (
         <div className="space-y-4">
-
-          {/* Header */}
           <div className="flex items-center justify-between">
             <button onClick={handleBack} className="text-gray-400">
               ← Back
             </button>
 
             <h3 className="text-sm font-semibold text-white">
-              Experts in{" "}
-              <span className="text-[#00e6c3]">{selectedSkill}</span>
+              Experts in <span className="text-[#00e6c3]">{selectedSkill}</span>
             </h3>
 
             <div className="w-8" />
           </div>
 
-          {/* Loading */}
           {loadingProfiles ? (
             <div className="space-y-3">
               <div className="h-24 rounded-xl bg-[#0c1317] animate-pulse" />
@@ -168,7 +165,6 @@ export default function Browse() {
                   transition
                 "
               >
-                {/* Avatar */}
                 {p.profile_image_url ? (
                   <img
                     src={p.profile_image_url}
@@ -180,20 +176,20 @@ export default function Browse() {
                   </div>
                 )}
 
-                {/* Info */}
                 <div className="flex-1">
-                  <p className="text-white font-medium">
-                    {p.full_name}
-                  </p>
+                  <p className="text-white font-medium">{p.full_name}</p>
+
                   <p className="text-xs text-gray-400">
-                    {p.city || "Remote"}
+                    {p.city || "Remote"} • ⭐{" "}
+                    {Number(p.average_rating || 0).toFixed(1)} •{" "}
+                    {p.reviews_count || 0} reviews
                   </p>
+
                   <p className="text-sm text-gray-300 line-clamp-2 mt-1">
                     {p.bio}
                   </p>
                 </div>
 
-                {/* CTA */}
                 <span className="text-xs text-[#00e6c3] font-medium">
                   View →
                 </span>
